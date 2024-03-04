@@ -31,6 +31,7 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         // 해당 API에 대해서는 모든 요청을 허가
+                        .requestMatchers("/members/sign-up").permitAll()
                         .requestMatchers("/members/sign-in").permitAll()
                         // USER 권한이 있어야 요청할 수 있음
                         .requestMatchers("/members/test").hasRole("USER")

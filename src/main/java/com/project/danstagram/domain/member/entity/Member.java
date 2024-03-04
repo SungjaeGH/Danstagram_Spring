@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(of = "memberIdx")
 public class Member implements UserDetails {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "member_idx", updatable = false, unique = true, nullable = false)
     private Long memberIdx;
 
