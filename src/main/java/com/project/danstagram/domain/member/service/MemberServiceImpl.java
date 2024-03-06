@@ -1,7 +1,9 @@
 package com.project.danstagram.domain.member.service;
 
 import com.project.danstagram.domain.member.dto.MemberResponseDto;
+import com.project.danstagram.domain.member.dto.ResetPwDto;
 import com.project.danstagram.domain.member.dto.SignUpDto;
+import com.project.danstagram.domain.member.entity.Member;
 import com.project.danstagram.domain.member.repository.MemberRepository;
 import com.project.danstagram.global.auth.jwt.JwtToken;
 import com.project.danstagram.global.auth.jwt.JwtTokenProvider;
@@ -10,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -86,5 +89,26 @@ public class MemberServiceImpl implements MemberService {
         }
 
         return resultCode;
+    }
+
+    @Transactional
+    @Override
+    public MemberResponseDto findMember(String memberInfo) {
+        Member member = memberRepository.findByMemberIdOrMemberPhoneOrMemberEmail(memberInfo, memberInfo, memberInfo)
+                .orElseThrow(() -> new UsernameNotFoundException("해당하는 회원을 찾을 수 없습니다."));
+
+        return MemberResponseDto.toResponseDto(member);
+    }
+
+    @Transactional
+    @Override
+    public MemberResponseDto resetMemberPw(Long memberIdx, ResetPwDto resetPwDto) {
+        if (!resetPwDto.getNewMemberPw().equals(resetPwDto.getConfirmMemberPw())) {
+            throw new IllegalArgumentException("입력한 비밀번호가 일치하지 않습니다.");
+        }
+
+        String encodedNewPw = passwordEncoder.encode(resetPwDto.getNewMemberPw());
+
+        return MemberResponseDto.toResponseDto(memberRepository.save(resetPwDto.toEntity(memberIdx, encodedNewPw)));
     }
 }
