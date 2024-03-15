@@ -1,15 +1,12 @@
 package com.project.danstagram.domain.member.entity;
 
+import com.project.danstagram.domain.auth.entity.SocialMember;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Entity
 @Getter
@@ -17,7 +14,8 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Builder
 @EqualsAndHashCode(of = "memberIdx")
-public class Member implements UserDetails {
+@Table(name = "member")
+public class Member {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "member_idx", updatable = false, unique = true, nullable = false)
@@ -36,7 +34,8 @@ public class Member implements UserDetails {
     private String memberPw;
 
     @Column(name = "member_role")
-    private String memberRole;
+    @Enumerated(EnumType.STRING)
+    private Role memberRole;
 
     @Column(name = "member_name")
     private String memberName;
@@ -66,49 +65,15 @@ public class Member implements UserDetails {
     private String memberStatus;
 
     @Column(name = "member_login_date")
-    private String memberLoginDate;
+    private LocalDateTime memberLoginDate;
 
     @Column(name = "member_logout_date")
-    private String memberLogoutDate;
+    private LocalDateTime memberLogoutDate;
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @Builder.Default
-    private List<String> roles = new ArrayList<>();
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<SocialMember> socialMembers = new ArrayList<>();
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return this.roles.stream()
-                .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public String getPassword() {
-        return this.memberPw;
-    }
-
-    @Override
-    public String getUsername() {
-        return this.memberId;
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return true;
+    public void putSocialMember(SocialMember socialMember) {
+        this.socialMembers.add(socialMember);
     }
 }

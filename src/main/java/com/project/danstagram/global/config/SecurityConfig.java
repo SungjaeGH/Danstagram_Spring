@@ -1,7 +1,9 @@
 package com.project.danstagram.global.config;
 
+import com.project.danstagram.domain.auth.handler.OAuth2AuthenticationFailureHandler;
+import com.project.danstagram.domain.auth.handler.OAuth2AuthenticationSuccessHandler;
+import com.project.danstagram.domain.auth.service.PrincipalOAuthMemberService;
 import com.project.danstagram.global.auth.jwt.JwtAuthenticationFilter;
-import com.project.danstagram.global.auth.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,7 +20,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final PrincipalOAuthMemberService principalOAuthMemberService;
+    private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+    private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
@@ -37,13 +42,27 @@ public class SecurityConfig {
                         // USER 권한이 있어야 요청할 수 있음
                         .requestMatchers("/members/test").hasRole("USER")
                         // 이 밖에 모든 요청에 대해서 인증을 필요로 한다는 설정
-                        .anyRequest().authenticated())
+                        .anyRequest().permitAll()
+                )
                 .formLogin(login -> login
+                        .loginPage("/sign-in-form")
+                        .loginProcessingUrl("/sign-in")
+                        .defaultSuccessUrl("/")
                         // login form의 default 파라미터 설정
                         .usernameParameter("memberInfo")
-                        .passwordParameter("memberPw"))
+                        .passwordParameter("memberPw")
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/sign-in-form")
+                        .userInfoEndpoint(endpoint -> endpoint
+                                .userService(principalOAuthMemberService)
+                        )
+                        .successHandler(oAuth2AuthenticationSuccessHandler)
+                        .failureHandler(oAuth2AuthenticationFailureHandler)
+                )
+
                 // JWT 인증을 위하여 직접 구현한 필터를 UsernamePasswordAuthenticationFilter 전에 실행
-                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 

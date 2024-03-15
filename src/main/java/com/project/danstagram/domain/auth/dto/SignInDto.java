@@ -1,4 +1,4 @@
-package com.project.danstagram.domain.member.dto;
+package com.project.danstagram.domain.auth.dto;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

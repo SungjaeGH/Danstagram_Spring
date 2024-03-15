@@ -1,11 +1,10 @@
 package com.project.danstagram.domain.member.dto;
 
 import com.project.danstagram.domain.member.entity.Member;
+import com.project.danstagram.domain.member.entity.Role;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.*;
-
-import java.util.List;
 
 @Getter
 @Setter
@@ -35,14 +34,14 @@ public class SignUpDto {
             message = "비밀번호는 8~16자 영문 대 소문자, 숫자, 특수문자를 사용하세요.")
     private String memberPw;
 
-    public Member toEntity(String encodedPassword, List<String> roles) {
+    public Member toEntity(String encodedPassword) {
         return Member.builder()
                 .memberEmail(memberEmail)
                 .memberPhone(memberPhone)
                 .memberName(memberName)
                 .memberId(memberId)
                 .memberPw(encodedPassword)
-                .roles(roles)
+                .memberRole(Role.USER)
                 .build();
     }
 }
