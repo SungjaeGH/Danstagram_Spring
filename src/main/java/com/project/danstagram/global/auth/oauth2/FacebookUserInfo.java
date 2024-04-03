@@ -1,16 +1,17 @@
 package com.project.danstagram.global.auth.oauth2;
 
-import lombok.AllArgsConstructor;
-
 import java.util.Map;
 
-@AllArgsConstructor
 public class FacebookUserInfo implements OAuth2UserInfo {
     private Map<String, Object> attributes;
 
+    public FacebookUserInfo(Map<String, Object> attributes) {
+        this.attributes = attributes;
+    }
+
     @Override
     public String getProviderId() {
-        return (String) attributes.get("id");
+        return attributes.get("id").toString();
     }
 
     @Override
@@ -20,11 +21,11 @@ public class FacebookUserInfo implements OAuth2UserInfo {
 
     @Override
     public String getEmail() {
-        return (String) attributes.get("email");
+        return attributes.get("email").toString();
     }
 
     @Override
     public String getName() {
-        return (String) attributes.get("name");
+        return attributes.get("name").toString();
     }
 }

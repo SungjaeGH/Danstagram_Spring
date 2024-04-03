@@ -45,9 +45,9 @@ public class SecurityConfig {
                         .anyRequest().permitAll()
                 )
                 .formLogin(login -> login
-                        .loginPage("/sign-in-form")
-                        .loginProcessingUrl("/sign-in")
-                        .defaultSuccessUrl("/")
+                        .loginPage("/sign-in-form")         // 사용자 정의 로그인 페이지
+                        .loginProcessingUrl("/sign-in")     // Security가 로그인 과정을 수행하기 위한 요청 URI
+                        .defaultSuccessUrl("/")             // 로그인 성공 후 이동 페이지
                         // login form의 default 파라미터 설정
                         .usernameParameter("memberInfo")
                         .passwordParameter("memberPw")

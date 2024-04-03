@@ -4,6 +4,7 @@ import com.project.danstagram.domain.auth.entity.PrincipalDetails;
 import com.project.danstagram.domain.auth.entity.SocialMember;
 import com.project.danstagram.domain.auth.repository.AuthRepository;
 import com.project.danstagram.global.auth.oauth2.FacebookUserInfo;
+import com.project.danstagram.global.auth.oauth2.KakaoUserInfo;
 import com.project.danstagram.global.auth.oauth2.OAuth2UserInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -30,8 +31,11 @@ public class PrincipalOAuthMemberService extends DefaultOAuth2UserService {
         String provider = userRequest.getClientRegistration().getRegistrationId();
 
         OAuth2UserInfo oAuth2UserInfo;
-        if (!provider.equals("facebook")) {
+        if (provider.equals("facebook")) {
             oAuth2UserInfo = new FacebookUserInfo(oAuth2User.getAttributes());
+
+        } else if (provider.equals("kakao")) {
+            oAuth2UserInfo = new KakaoUserInfo(oAuth2User.getAttributes());
 
         } else {
             throw new UnsupportedOperationException("Unsupported OAuth2 provider : " + provider);
