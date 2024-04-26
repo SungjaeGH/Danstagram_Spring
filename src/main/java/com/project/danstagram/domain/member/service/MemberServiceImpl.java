@@ -4,7 +4,9 @@ import com.project.danstagram.domain.member.dto.MemberResponseDto;
 import com.project.danstagram.domain.member.dto.ResetPwDto;
 import com.project.danstagram.domain.member.dto.SignUpDto;
 import com.project.danstagram.domain.member.entity.Member;
+import com.project.danstagram.domain.member.entity.SocialMember;
 import com.project.danstagram.domain.member.repository.MemberRepository;
+import com.project.danstagram.domain.member.repository.SocialMemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -20,6 +22,7 @@ import java.util.regex.Pattern;
 @Slf4j
 public class MemberServiceImpl implements MemberService {
     private final MemberRepository memberRepository;
+    private final SocialMemberRepository socialMemberRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
@@ -46,7 +49,18 @@ public class MemberServiceImpl implements MemberService {
 
         String encodePw = passwordEncoder.encode(signUpDto.getMemberPw());
 
-        return MemberResponseDto.toResponseDto(memberRepository.save(signUpDto.toEntity(encodePw)));
+        Member savedMember = signUpDto.toEntity(encodePw);
+
+        // 소셜 회원일 경우, 1:N 연결
+        if (signUpDto.getSocialMemberIdx() != 0) {
+            SocialMember socialMember = socialMemberRepository
+                    .findBySocialIdx(signUpDto.getSocialMemberIdx())
+                    .orElseThrow(() -> new UsernameNotFoundException("해당하는 소셜 회원을 찾을 수 없습니다."));
+
+            savedMember.putSocialMember(socialMember);
+        }
+
+        return MemberResponseDto.toResponseDto(memberRepository.save(savedMember));
     }
 
     private static int checkMemberInfoValidation(String memberInfo) {

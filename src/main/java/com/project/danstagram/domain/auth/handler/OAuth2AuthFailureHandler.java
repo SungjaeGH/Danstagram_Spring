@@ -12,10 +12,10 @@ import java.io.IOException;
 
 @Slf4j
 @Component
-public class OAuth2AuthenticationFailureHandler implements AuthenticationFailureHandler {
+public class OAuth2AuthFailureHandler implements AuthenticationFailureHandler {
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
         // 인증 실패 시, 메인 페이지로 이동
-        response.sendRedirect("http://localhost:8080/");
+        response.sendRedirect("http://localhost:8080");
     }
 }

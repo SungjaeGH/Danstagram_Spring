@@ -1,7 +1,7 @@
 package com.project.danstagram.domain.auth.handler;
 
 import com.project.danstagram.domain.auth.entity.PrincipalDetails;
-import com.project.danstagram.domain.auth.entity.SocialMember;
+import com.project.danstagram.domain.member.entity.SocialMember;
 import com.project.danstagram.domain.member.entity.Member;
 import com.project.danstagram.global.auth.jwt.JwtToken;
 import com.project.danstagram.global.auth.jwt.JwtTokenProvider;
@@ -21,7 +21,7 @@ import java.nio.charset.StandardCharsets;
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
+public class OAuth2AuthSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
     private JwtTokenProvider jwtTokenProvider;
 
     @Override
@@ -37,7 +37,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             log.info("jwtToken = {}", token.getAccessToken());
 
             // accessToken을 쿼리스트링에 담는 url을 만들어준다.
-            String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:8080/loginSuccess")
+            String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:8080")
                     .queryParam("accessToken", token.getAccessToken())
                     .build()
                     .encode(StandardCharsets.UTF_8)
@@ -48,7 +48,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         } else {
             // 회원이 존재하지 않을 경우, SocialMember의 idx를 쿼리스트링으로 전달하는 url을 만들어준다.
-            String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:8080/loginSuccess")
+            String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:8080")
                     .queryParam("socialMemberIdx", socialMember.getSocialIdx())
                     .build()
                     .encode(StandardCharsets.UTF_8)

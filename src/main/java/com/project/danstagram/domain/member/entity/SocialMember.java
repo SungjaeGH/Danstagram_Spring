@@ -1,16 +1,13 @@
-package com.project.danstagram.domain.auth.entity;
+package com.project.danstagram.domain.member.entity;
 
-import com.project.danstagram.domain.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
-@Builder
 @EqualsAndHashCode(of = "socialIdx")
 @Table(name = "social_member")
+@Entity
 public class SocialMember {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,7 +26,21 @@ public class SocialMember {
     @Column(name = "social_name", unique = true, nullable = false)
     private String socialName;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_idx", referencedColumnName = "member_idx")
     private Member member;
+
+    @Builder
+    public SocialMember(Long socialIdx, String socialEmail, String providerId, String provider, String socialName, Member member) {
+        this.socialIdx = socialIdx;
+        this.socialEmail = socialEmail;
+        this.providerId = providerId;
+        this.provider = provider;
+        this.socialName = socialName;
+        this.member = member;
+    }
+
+    public void putMember(Member member) {
+        this.member = member;
+    }
 }

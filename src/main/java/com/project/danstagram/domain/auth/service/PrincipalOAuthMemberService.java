@@ -1,8 +1,8 @@
 package com.project.danstagram.domain.auth.service;
 
 import com.project.danstagram.domain.auth.entity.PrincipalDetails;
-import com.project.danstagram.domain.auth.entity.SocialMember;
-import com.project.danstagram.domain.auth.repository.AuthRepository;
+import com.project.danstagram.domain.member.entity.SocialMember;
+import com.project.danstagram.domain.member.repository.SocialMemberRepository;
 import com.project.danstagram.global.auth.oauth2.FacebookUserInfo;
 import com.project.danstagram.global.auth.oauth2.KakaoUserInfo;
 import com.project.danstagram.global.auth.oauth2.OAuth2UserInfo;
@@ -13,12 +13,14 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class PrincipalOAuthMemberService extends DefaultOAuth2UserService {
-    private final AuthRepository authRepository;
+    private final SocialMemberRepository socialMemberRepository;
 
     /*
         * OAuth 2.0 인증을 통해 SocialMember 정보를 가져오는 역할.
@@ -43,19 +45,20 @@ public class PrincipalOAuthMemberService extends DefaultOAuth2UserService {
 
         String socialEmail = oAuth2UserInfo.getEmail();
 
-        Optional<SocialMember> socialMemberOptional = authRepository.findBySocialEmail(socialEmail);
+        Optional<SocialMember> socialMemberOptional = socialMemberRepository.findBySocialEmail(socialEmail);
         boolean isExist = socialMemberOptional.isPresent();
 
         // Social Member 정보 존재 유무에 따른 Member 생성 여부 추가
-        oAuth2User.getAttributes().put("exist", isExist);
+        Map<String, Object> newAttributes = new HashMap<>(oAuth2User.getAttributes());
+        newAttributes.put("exist", isExist);
 
         // Social Member 정보 없을 경우, DB 저장
         if (!isExist) {
-            SocialMember saveSocialMember = authRepository.save(createSocialMember(oAuth2UserInfo));
-            return new PrincipalDetails(saveSocialMember, oAuth2User.getAttributes());
+            SocialMember saveSocialMember = socialMemberRepository.save(createSocialMember(oAuth2UserInfo));
+            return new PrincipalDetails(saveSocialMember, newAttributes);
         }
 
-        return new PrincipalDetails(socialMemberOptional.get(), oAuth2User.getAttributes());
+        return new PrincipalDetails(socialMemberOptional.get(), newAttributes);
     }
 
     private SocialMember createSocialMember(OAuth2UserInfo oAuth2UserInfo) {

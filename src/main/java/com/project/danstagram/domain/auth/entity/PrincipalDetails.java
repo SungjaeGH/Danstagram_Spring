@@ -1,6 +1,8 @@
 package com.project.danstagram.domain.auth.entity;
 
 import com.project.danstagram.domain.member.entity.Member;
+import com.project.danstagram.domain.member.entity.Role;
+import com.project.danstagram.domain.member.entity.SocialMember;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -41,24 +43,32 @@ public class PrincipalDetails implements UserDetails, OAuth2User {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Collection<GrantedAuthority> collection = new ArrayList<>();
-        collection.add(new GrantedAuthority() {
-            @Override
-            public String getAuthority() {
-                return String.valueOf(member.getMemberRole());
-            }
-        });
+        if (member != null) {
+            collection.add(() -> String.valueOf(member.getMemberRole()));
+
+        } else if (socialMember != null) {
+            collection.add(() -> String.valueOf(Role.USER));
+        }
 
         return collection;
     }
 
     @Override
     public String getPassword() {
-        return member.getMemberPw();
+        return (member != null) ? member.getMemberPw() : null;
     }
 
     @Override
     public String getUsername() {
-        return member.getMemberId();
+        if (this.member != null) {
+            return member.getMemberId();
+
+        } else if (this.socialMember != null) {
+            return socialMember.getSocialName();
+
+        } else {
+            throw new IllegalStateException("Member 또는 SocialMember 정보가 없습니다.");
+        }
     }
 
     @Override

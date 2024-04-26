@@ -14,13 +14,13 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/members")
+@RequestMapping("/api/member")
 public class MemberController {
 
     private final MemberService memberService;
 
-    @PostMapping("/sign-up")
-    public ResponseEntity<MemberResponseDto> signUp(@RequestBody @Valid SignUpDto signUpDto, Errors errors) {
+    @PostMapping("/register")
+    public ResponseEntity<MemberResponseDto> register(@RequestBody @Valid SignUpDto signUpDto, Errors errors) {
         if (errors.hasErrors()) {
             return ResponseEntity.badRequest().build();
         }

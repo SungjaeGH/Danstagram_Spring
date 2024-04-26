@@ -1,6 +1,5 @@
 package com.project.danstagram.domain.member.entity;
 
-import com.project.danstagram.domain.auth.entity.SocialMember;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -8,13 +7,11 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
-@Builder
 @EqualsAndHashCode(of = "memberIdx")
 @Table(name = "member")
+@Entity
 public class Member {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -73,7 +70,30 @@ public class Member {
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SocialMember> socialMembers = new ArrayList<>();
 
+    @Builder
+    public Member(Long memberIdx, String memberId, String memberPhone, String memberEmail, String memberPw, Role memberRole, String memberName, String memberIntroduce, String memberWebsite, String memberGender, String memberImageUrl, String memberImageType, String memberImageName, String memberImageUuid, String memberStatus, LocalDateTime memberLoginDate, LocalDateTime memberLogoutDate, List<SocialMember> socialMembers) {
+        this.memberIdx = memberIdx;
+        this.memberId = memberId;
+        this.memberPhone = memberPhone;
+        this.memberEmail = memberEmail;
+        this.memberPw = memberPw;
+        this.memberRole = memberRole;
+        this.memberName = memberName;
+        this.memberIntroduce = memberIntroduce;
+        this.memberWebsite = memberWebsite;
+        this.memberGender = memberGender;
+        this.memberImageUrl = memberImageUrl;
+        this.memberImageType = memberImageType;
+        this.memberImageName = memberImageName;
+        this.memberImageUuid = memberImageUuid;
+        this.memberStatus = memberStatus;
+        this.memberLoginDate = memberLoginDate;
+        this.memberLogoutDate = memberLogoutDate;
+        this.socialMembers = socialMembers;
+    }
+
     public void putSocialMember(SocialMember socialMember) {
         this.socialMembers.add(socialMember);
+        socialMember.putMember(this);
     }
 }

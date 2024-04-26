@@ -10,13 +10,12 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
 public class AuthController {
-
     private final AuthService authService;
 
-    @PostMapping("/sign-in")
-    public JwtToken signIn(@RequestBody SignInDto signInDto) {
+    @PostMapping("/login")
+    public JwtToken login(@RequestBody SignInDto signInDto) {
         String memberInfo = signInDto.getMemberInfo();
         String memberPw = signInDto.getMemberPw();
 

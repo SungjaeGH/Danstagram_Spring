@@ -17,8 +17,8 @@ public class PrincipalMemberService implements UserDetailsService {
     private final MemberRepository memberRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String userInfo) {
-        return memberRepository.findByMemberIdOrMemberPhoneOrMemberEmail(userInfo, userInfo, userInfo)
+    public UserDetails loadUserByUsername(String memberInfo) {
+        return memberRepository.findByMemberIdOrMemberPhoneOrMemberEmail(memberInfo, memberInfo, memberInfo)
                 .map(this::createUserDetails)
                 .orElseThrow(() -> new UsernameNotFoundException("해당하는 회원을 찾을 수 없습니다."));
     }

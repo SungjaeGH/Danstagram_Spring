@@ -1,7 +1,9 @@
 package com.project.danstagram.global.config;
 
-import com.project.danstagram.domain.auth.handler.OAuth2AuthenticationFailureHandler;
-import com.project.danstagram.domain.auth.handler.OAuth2AuthenticationSuccessHandler;
+import com.project.danstagram.domain.auth.handler.NormalAuthFailureHandler;
+import com.project.danstagram.domain.auth.handler.NormalAuthSuccessHandler;
+import com.project.danstagram.domain.auth.handler.OAuth2AuthFailureHandler;
+import com.project.danstagram.domain.auth.handler.OAuth2AuthSuccessHandler;
 import com.project.danstagram.domain.auth.service.PrincipalOAuthMemberService;
 import com.project.danstagram.global.auth.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
@@ -22,8 +24,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final PrincipalOAuthMemberService principalOAuthMemberService;
-    private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
-    private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
+    private final NormalAuthSuccessHandler normalAuthSuccessHandler;
+    private final NormalAuthFailureHandler normalAuthFailureHandler;
+    private final OAuth2AuthSuccessHandler oAuth2AuthSuccessHandler;
+    private final OAuth2AuthFailureHandler oAuth2AuthFailureHandler;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
@@ -36,29 +40,39 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         // 해당 API에 대해서는 모든 요청을 허가
-                        .requestMatchers("/members/sign-up").permitAll()
-                        .requestMatchers("/members/sign-in").permitAll()
-                        .requestMatchers("/members/password/reset/{memberIdx}").permitAll()
-                        // USER 권한이 있어야 요청할 수 있음
-                        .requestMatchers("/members/test").hasRole("USER")
-                        // 이 밖에 모든 요청에 대해서 인증을 필요로 한다는 설정
+//                        .requestMatchers("/members/sign-up").permitAll()
+//                        .requestMatchers("/members/sign-in").permitAll()
+//                        .requestMatchers("/members/password/reset/{memberIdx}").permitAll()
+//                        // USER 권한이 있어야 요청할 수 있음
+//                        .requestMatchers("/members/test").hasRole("USER")
+//                        // 이 밖에 모든 요청에 대해서 인증을 필요로 한다는 설정
+//                        .requestMatchers("/login").permitAll()
+//                        .requestMatchers("/login/**").permitAll()
+//                        .requestMatchers("/**").permitAll()
                         .anyRequest().permitAll()
                 )
                 .formLogin(login -> login
-                        .loginPage("/sign-in-form")         // 사용자 정의 로그인 페이지
-                        .loginProcessingUrl("/sign-in")     // Security가 로그인 과정을 수행하기 위한 요청 URI
-                        .defaultSuccessUrl("/")             // 로그인 성공 후 이동 페이지
+                        // 사용자 정의 로그인 페이지
+                        .loginPage("/login")
+                        // Security가 로그인 과정을 수행하기 위한 요청 URI
+                        .loginProcessingUrl("/api/auth/login")
                         // login form의 default 파라미터 설정
                         .usernameParameter("memberInfo")
                         .passwordParameter("memberPw")
+                        // Handler
+                        .successHandler(normalAuthSuccessHandler)
+                        .failureHandler(normalAuthFailureHandler)
                 )
                 .oauth2Login(oauth2 -> oauth2
-                        .loginPage("/sign-in-form")
+                        .loginPage("/login")
+                        .redirectionEndpoint(redirect -> redirect
+                                .baseUri("/login/oauth2/callback/*")
+                        )
                         .userInfoEndpoint(endpoint -> endpoint
                                 .userService(principalOAuthMemberService)
                         )
-                        .successHandler(oAuth2AuthenticationSuccessHandler)
-                        .failureHandler(oAuth2AuthenticationFailureHandler)
+                        .successHandler(oAuth2AuthSuccessHandler)
+                        .failureHandler(oAuth2AuthFailureHandler)
                 )
 
                 // JWT 인증을 위하여 직접 구현한 필터를 UsernamePasswordAuthenticationFilter 전에 실행
