@@ -1,5 +1,6 @@
 package com.project.danstagram.domain.member.entity;
 
+import com.project.danstagram.domain.post.entity.Post;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -70,6 +71,9 @@ public class Member {
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SocialMember> socialMembers = new ArrayList<>();
 
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Post> posts = new ArrayList<>();
+
     @Builder
     public Member(Long memberIdx, String memberId, String memberPhone, String memberEmail, String memberPw, Role memberRole, String memberName, String memberIntroduce, String memberWebsite, String memberGender, String memberImageUrl, String memberImageType, String memberImageName, String memberImageUuid, String memberStatus, LocalDateTime memberLoginDate, LocalDateTime memberLogoutDate, List<SocialMember> socialMembers) {
         this.memberIdx = memberIdx;
@@ -95,5 +99,10 @@ public class Member {
     public void putSocialMember(SocialMember socialMember) {
         this.socialMembers.add(socialMember);
         socialMember.putMember(this);
+    }
+
+    public void putPost(Post post) {
+        this.posts.add(post);
+        post.putMember(this);
     }
 }
