@@ -9,11 +9,11 @@ import lombok.Getter;
 @AllArgsConstructor
 @Builder
 public class MemberResponseDto {
-    private Long memberIdx;
+    private String memberName;
 
     public static MemberResponseDto toResponseDto(Member member) {
         return MemberResponseDto.builder()
-                .memberIdx(member.getMemberIdx())
+                .memberName(member.getMemberName())
                 .build();
     }
 }

@@ -1,22 +1,28 @@
 package com.project.danstagram.global.config;
 
-import com.project.danstagram.domain.auth.handler.NormalAuthFailureHandler;
+import com.project.danstagram.domain.auth.handler.AuthFailureHandler;
 import com.project.danstagram.domain.auth.handler.NormalAuthSuccessHandler;
-import com.project.danstagram.domain.auth.handler.OAuth2AuthFailureHandler;
 import com.project.danstagram.domain.auth.handler.OAuth2AuthSuccessHandler;
 import com.project.danstagram.domain.auth.service.PrincipalOAuthMemberService;
 import com.project.danstagram.global.auth.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -25,13 +31,16 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final PrincipalOAuthMemberService principalOAuthMemberService;
     private final NormalAuthSuccessHandler normalAuthSuccessHandler;
-    private final NormalAuthFailureHandler normalAuthFailureHandler;
     private final OAuth2AuthSuccessHandler oAuth2AuthSuccessHandler;
-    private final OAuth2AuthFailureHandler oAuth2AuthFailureHandler;
+    private final AuthFailureHandler authFailureHandler;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity
+                // CORS 설정
+                .cors(cors -> cors
+                        .configurationSource(corsConfigurationSource())
+                )
                 // REST API이므로 basic auth 및 csrf 보안을 사용하지 않음
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
@@ -40,16 +49,13 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         // 해당 API에 대해서는 모든 요청을 허가
-//                        .requestMatchers("/members/sign-up").permitAll()
-//                        .requestMatchers("/members/sign-in").permitAll()
-//                        .requestMatchers("/members/password/reset/{memberIdx}").permitAll()
-//                        // USER 권한이 있어야 요청할 수 있음
-//                        .requestMatchers("/members/test").hasRole("USER")
-//                        // 이 밖에 모든 요청에 대해서 인증을 필요로 한다는 설정
-//                        .requestMatchers("/login").permitAll()
-//                        .requestMatchers("/login/**").permitAll()
-//                        .requestMatchers("/**").permitAll()
-                        .anyRequest().permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/member/**").permitAll()
+                        .requestMatchers("/login/**").permitAll()
+                        // USER 권한이 있어야 요청할 수 있음
+                        .requestMatchers("/api/member/req").hasRole("USER")
+                        // 이 밖에 모든 요청에 대해서 인증을 필요로 한다는 설정
+                        .anyRequest().authenticated()
                 )
                 .formLogin(login -> login
                         // 사용자 정의 로그인 페이지
@@ -61,7 +67,7 @@ public class SecurityConfig {
                         .passwordParameter("memberPw")
                         // Handler
                         .successHandler(normalAuthSuccessHandler)
-                        .failureHandler(normalAuthFailureHandler)
+                        .failureHandler(authFailureHandler)
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login")
@@ -72,7 +78,7 @@ public class SecurityConfig {
                                 .userService(principalOAuthMemberService)
                         )
                         .successHandler(oAuth2AuthSuccessHandler)
-                        .failureHandler(oAuth2AuthFailureHandler)
+                        .failureHandler(authFailureHandler)
                 )
 
                 // JWT 인증을 위하여 직접 구현한 필터를 UsernamePasswordAuthenticationFilter 전에 실행
@@ -84,5 +90,36 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         // BCrypt Encoder 사용
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+    }
+
+    /**
+     * CORS 설정 Config
+     */
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+
+        config.setAllowCredentials(true);
+        config.setAllowedOrigins(List.of("http://localhost:3000"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(List.of("*"));
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
+
+
+    /**
+     * Security Debug 설정 Config
+     */
+
+    @Value("${spring.security.debug:false}")
+    boolean securityDebug;
+
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web -> web.debug(securityDebug));
     }
 }

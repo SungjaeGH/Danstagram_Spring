@@ -31,7 +31,7 @@ public class MemberController {
     @GetMapping ("/find")
     public ResponseEntity<MemberResponseDto> findMember(@RequestParam String memberInfo) {
         MemberResponseDto memberResponseDto = memberService.findMember(memberInfo);
-        if (memberResponseDto.getMemberIdx() == 0) {
+        if (memberResponseDto.getMemberName() == null) {
             return ResponseEntity.notFound().build();
         }
 
@@ -47,10 +47,5 @@ public class MemberController {
         }
 
         return ResponseEntity.ok(memberService.resetMemberPw(memberIdx, resetPwDto));
-    }
-
-    @PostMapping("/test")
-    public String test() {
-        return "success";
     }
 }

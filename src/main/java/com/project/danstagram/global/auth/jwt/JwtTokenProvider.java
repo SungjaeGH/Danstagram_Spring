@@ -27,7 +27,6 @@ public class JwtTokenProvider {
         String accessToken = generateAccessToken(userInfo, role);
 
         // 토큰 저장
-
         return new JwtToken("Bearer", accessToken, refreshToken);
     }
 

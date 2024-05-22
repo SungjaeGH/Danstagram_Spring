@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -22,7 +23,7 @@ import java.nio.charset.StandardCharsets;
 @RequiredArgsConstructor
 @Component
 public class OAuth2AuthSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
-    private JwtTokenProvider jwtTokenProvider;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
@@ -33,11 +34,18 @@ public class OAuth2AuthSuccessHandler extends SimpleUrlAuthenticationSuccessHand
         // 회원이 존재할 경우
         if (isExist) {
             Member member = socialMember.getMember();
-            JwtToken token = jwtTokenProvider.generateToken(member.getMemberId(), member.getMemberRole().toString());
-            log.info("jwtToken = {}", token.getAccessToken());
+
+            String username = member.getMemberId();
+            String role = principalDetails.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .findFirst()
+                    .toString();
+
+            JwtToken token = jwtTokenProvider.generateToken(username, role);
+            log.info("user = {}, jwtToken = {}", username, token.getAccessToken());
 
             // accessToken을 쿼리스트링에 담는 url을 만들어준다.
-            String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:8080")
+            String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3000")
                     .queryParam("accessToken", token.getAccessToken())
                     .build()
                     .encode(StandardCharsets.UTF_8)
@@ -48,7 +56,7 @@ public class OAuth2AuthSuccessHandler extends SimpleUrlAuthenticationSuccessHand
 
         } else {
             // 회원이 존재하지 않을 경우, SocialMember의 idx를 쿼리스트링으로 전달하는 url을 만들어준다.
-            String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:8080")
+            String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3000")
                     .queryParam("socialMemberIdx", socialMember.getSocialIdx())
                     .build()
                     .encode(StandardCharsets.UTF_8)
