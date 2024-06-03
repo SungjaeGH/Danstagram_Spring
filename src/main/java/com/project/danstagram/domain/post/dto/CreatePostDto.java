@@ -3,6 +3,8 @@ package com.project.danstagram.domain.post.dto;
 import com.project.danstagram.domain.post.entity.Post;
 import lombok.*;
 
+import java.util.ArrayList;
+
 @Getter
 @AllArgsConstructor
 public class CreatePostDto {
@@ -14,6 +16,7 @@ public class CreatePostDto {
         return Post.builder()
                 .postContent(postContent)
                 .postDate(currDate)
+                .postImages(new ArrayList<>())
                 .build();
     }
 }

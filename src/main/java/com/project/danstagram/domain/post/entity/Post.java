@@ -38,13 +38,14 @@ public class Post {
     private List<PostImage> postImages = new ArrayList<>();
 
     @Builder
-    public Post(Long postIdx, String postContent, String postDate, String postUpdateDate, String postDeleteDate, Member member) {
+    public Post(Long postIdx, String postContent, String postDate, String postUpdateDate, String postDeleteDate, Member member, List<PostImage> postImages) {
         this.postIdx = postIdx;
         this.postContent = postContent;
         this.postDate = postDate;
         this.postUpdateDate = postUpdateDate;
         this.postDeleteDate = postDeleteDate;
         this.member = member;
+        this.postImages = postImages;
     }
 
     public void putMember(Member member) {

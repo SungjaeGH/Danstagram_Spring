@@ -1,5 +1,7 @@
 package com.project.danstagram.global.file;
 
+import com.project.danstagram.global.time.TimeFormat;
+import com.project.danstagram.global.time.TimeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -8,14 +10,13 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Component
 public class FileUploadUtil {
     private static final Logger logger = LoggerFactory.getLogger(FileUploadUtil.class);
 
-    public List<Map<String, Object>> multiFileUpload(List<MultipartFile> fileMap, int pathFlag) throws IllegalStateException, IOException {
+    public List<Map<String, Object>> multiFileUpload(Long writerIdx, List<MultipartFile> fileMap, int pathFlag) throws IllegalStateException, IOException {
 
         List<Map<String, Object>> list = new ArrayList<>();
 
@@ -25,7 +26,7 @@ public class FileUploadUtil {
                 String oName = multipartFile.getOriginalFilename();	// 원래 파일명
 
                 // 변경된 파일이름 구하기
-                String fileName = getUniqueFileName(oName);
+                String fileName = getUniqueFileName(writerIdx, oName);
 
                 //업로드할 폴더 구하기
                 String uploadPath = getUploadPath(pathFlag);
@@ -49,10 +50,11 @@ public class FileUploadUtil {
         return list;
     }
 
-    public String getUniqueFileName(String fileName) {
+    public String getUniqueFileName(Long writerIdx, String fileName) {
         // 파일명이 중복될 경우 파일이름 변경하기
-        // 파일명에 현재시간(년원일 시분초 밀리초)을 붙여서 변경된 파일이름 구하기
-        // ex) a.jpg => a_20220602113820123.jpg
+        // 파일명 앞 : 게시물 작성자 Index 붙이기
+        // 파일명 뒤 : 현재시간(년원일 시분초 밀리초) 붙이기
+        // ex) a.jpg => 1_a_20220602113820123.jpg
 
         // 순수 파일명만 구하기 => a
         int idx = fileName.lastIndexOf(".");
@@ -61,13 +63,11 @@ public class FileUploadUtil {
         // 확장자 구하기 => .jpg
         String ext = fileName.substring(idx);
 
-        // 변경된 파일이름
-        Date d = new Date();
-        // => '년원일시분초밀리초' 포맷
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmssSSS");
-        
-        String today = sdf.format(d);
-        String result = fileNm + "_" + today + ext;
+        // 현재시간 구하기
+        TimeUtil timeUtil = new TimeUtil();
+        String today = timeUtil.getCurrTime(TimeFormat.TimeFormat2);
+
+        String result = writerIdx + "_" + fileNm + "_" + today + ext;
         logger.info("변경된 파일명 : " + result);
 
         return result;
@@ -86,7 +86,7 @@ public class FileUploadUtil {
         return path;
     }
 
-    public void checkDirectory(int pathFlag) {
+    public boolean checkDirectory(int pathFlag, boolean isCreateDir) {
         String path = null;
 
         switch (pathFlag) {
@@ -96,12 +96,21 @@ public class FileUploadUtil {
 
         Path directoryPath = Paths.get(path);
 
-        try {
-            Files.createDirectories(directoryPath);
-            logger.info("디렉토리 생성 : " + directoryPath);
+        if (isCreateDir) {
+            try {
+                Files.createDirectories(directoryPath);
+                logger.info("디렉토리 생성 : " + directoryPath);
+                return true;
 
-        } catch (IOException e) {
-            e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
+
+        if (Files.exists(directoryPath)) {
+            return true;
+        }
+
+        return false;
     }
 }
