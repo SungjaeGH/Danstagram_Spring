@@ -1,6 +1,5 @@
 package com.project.danstagram.domain.member.dto;
 
-import com.project.danstagram.domain.member.entity.Member;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,11 +11,4 @@ public class ResetPwDto {
             message = "비밀번호는 8~16자 영문 대 소문자, 숫자, 특수문자를 사용하세요.")
     private String newMemberPw;
     private String confirmMemberPw;
-
-    public Member toEntity(Long memberIdx, String newEncodedPassword) {
-        return Member.builder()
-                .memberIdx(memberIdx)
-                .memberPw(newEncodedPassword)
-                .build();
-    }
 }

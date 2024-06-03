@@ -15,8 +15,6 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -37,13 +35,7 @@ public class NormalAuthSuccessHandler implements AuthenticationSuccessHandler {
         JwtToken token = jwtTokenProvider.generateToken(username, role);
         log.info("user = {}, jwtToken = {}", username, token.getAccessToken());
 
-        // 쿼리 파라미터에 토큰 추가
-        String targetUrl = "http://localhost:3000";
-        String redirectUrl = String.format("%s?accessToken=%s",
-                targetUrl,
-                URLEncoder.encode(token.getAccessToken(), StandardCharsets.UTF_8));
-
         response.setStatus(HttpStatus.OK.value());
-        response.sendRedirect(redirectUrl);
+        response.setHeader("Authorization", "Bearer " + token.getAccessToken());
     }
 }

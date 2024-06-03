@@ -52,7 +52,7 @@ public class MemberServiceImpl implements MemberService {
         Member savedMember = signUpDto.toEntity(encodePw);
 
         // 소셜 회원일 경우, 1:N 연결
-        if (signUpDto.getSocialMemberIdx() != null) {
+        if (signUpDto.getSocialMemberIdx() != 0) {
             SocialMember socialMember = socialMemberRepository
                     .findBySocialIdx(signUpDto.getSocialMemberIdx())
                     .orElseThrow(() -> new UsernameNotFoundException("해당하는 소셜 회원을 찾을 수 없습니다."));
@@ -94,8 +94,12 @@ public class MemberServiceImpl implements MemberService {
             throw new IllegalArgumentException("입력한 비밀번호가 일치하지 않습니다.");
         }
 
-        String encodedNewPw = passwordEncoder.encode(resetPwDto.getNewMemberPw());
+        Member changedMember = memberRepository.findById(memberIdx)
+                .orElseThrow(() -> new UsernameNotFoundException("해당하는 회원을 찾을 수 없습니다."));
 
-        return MemberResponseDto.toResponseDto(memberRepository.save(resetPwDto.toEntity(memberIdx, encodedNewPw)));
+        String encodedNewPw = passwordEncoder.encode(resetPwDto.getNewMemberPw());
+        changedMember.changePw(encodedNewPw);
+
+        return MemberResponseDto.toResponseDto(memberRepository.save(changedMember));
     }
 }

@@ -105,4 +105,8 @@ public class Member {
         this.posts.add(post);
         post.putMember(this);
     }
+
+    public void changePw(String newEncodedPw) {
+        this.memberPw = newEncodedPw;
+    }
 }
