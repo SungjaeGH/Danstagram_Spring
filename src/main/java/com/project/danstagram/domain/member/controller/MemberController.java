@@ -38,14 +38,14 @@ public class MemberController {
         return ResponseEntity.ok(memberResponseDto);
     }
 
-    @PatchMapping("/password/reset/{memberIdx}")
-    public ResponseEntity<MemberResponseDto> resetPw(@PathVariable Long memberIdx,
+    @PatchMapping("/password/reset/{memberId}")
+    public ResponseEntity<MemberResponseDto> resetPw(@PathVariable String memberId,
                                                      @RequestBody @Valid ResetPwDto resetPwDto,
                                                      Errors errors) {
         if (errors.hasErrors()) {
             return ResponseEntity.badRequest().build();
         }
 
-        return ResponseEntity.ok(memberService.resetMemberPw(memberIdx, resetPwDto));
+        return ResponseEntity.ok(memberService.resetMemberPw(memberId, resetPwDto));
     }
 }

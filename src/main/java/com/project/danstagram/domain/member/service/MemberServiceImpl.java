@@ -89,12 +89,12 @@ public class MemberServiceImpl implements MemberService {
 
     @Transactional
     @Override
-    public MemberResponseDto resetMemberPw(Long memberIdx, ResetPwDto resetPwDto) {
+    public MemberResponseDto resetMemberPw(String memberId, ResetPwDto resetPwDto) {
         if (!resetPwDto.getNewMemberPw().equals(resetPwDto.getConfirmMemberPw())) {
             throw new IllegalArgumentException("입력한 비밀번호가 일치하지 않습니다.");
         }
 
-        Member changedMember = memberRepository.findById(memberIdx)
+        Member changedMember = memberRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new UsernameNotFoundException("해당하는 회원을 찾을 수 없습니다."));
 
         String encodedNewPw = passwordEncoder.encode(resetPwDto.getNewMemberPw());

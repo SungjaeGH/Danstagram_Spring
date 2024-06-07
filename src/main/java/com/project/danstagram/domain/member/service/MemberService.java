@@ -13,5 +13,5 @@ public interface MemberService {
     MemberResponseDto findMember(String memberInfo);
 
     @Transactional
-    MemberResponseDto resetMemberPw(Long memberIdx, ResetPwDto resetPwDto);
+    MemberResponseDto resetMemberPw(String memberId, ResetPwDto resetPwDto);
 }
