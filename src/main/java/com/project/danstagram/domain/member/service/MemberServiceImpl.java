@@ -52,9 +52,9 @@ public class MemberServiceImpl implements MemberService {
         Member savedMember = signUpDto.toEntity(encodePw);
 
         // 소셜 회원일 경우, 1:N 연결
-        if (signUpDto.getSocialMemberIdx() != 0) {
+        if (signUpDto.getSocialMemberEmail() != null) {
             SocialMember socialMember = socialMemberRepository
-                    .findBySocialIdx(signUpDto.getSocialMemberIdx())
+                    .findBySocialEmail(signUpDto.getSocialMemberEmail())
                     .orElseThrow(() -> new UsernameNotFoundException("해당하는 소셜 회원을 찾을 수 없습니다."));
 
             savedMember.putSocialMember(socialMember);

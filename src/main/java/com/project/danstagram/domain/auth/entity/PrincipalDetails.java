@@ -53,6 +53,13 @@ public class PrincipalDetails implements UserDetails, OAuth2User {
         return collection;
     }
 
+    public String getMemberRole() {
+        return getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .findFirst()
+                .toString();
+    }
+
     @Override
     public String getPassword() {
         return (member != null) ? member.getMemberPw() : null;

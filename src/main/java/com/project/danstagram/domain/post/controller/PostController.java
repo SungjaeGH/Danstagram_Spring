@@ -7,13 +7,13 @@ import com.project.danstagram.domain.post.service.PostImageService;
 import com.project.danstagram.domain.post.service.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -42,12 +42,12 @@ public class PostController {
         return ResponseEntity.ok(postService.findPost(postIdx));
     }
 
-    @GetMapping("/uploads/images/{postIdx}")
-    public ResponseEntity<List<ByteArrayResource>> getPostImage(@PathVariable Long postIdx) throws IOException {
+    @GetMapping("/display/images/{postIdx}")
+    public ResponseEntity<Map<String, String>> getPostImage(@PathVariable Long postIdx) {
 
-        List<ByteArrayResource> imagesList = postImageService.getImagesList(postIdx);
+        Map<String, String> imagesMap = postImageService.getImagesList(postIdx);
         return ResponseEntity.ok()
-                .body(imagesList);
+                .body(imagesMap);
     }
 
     @PatchMapping("/update/{postIdx}")

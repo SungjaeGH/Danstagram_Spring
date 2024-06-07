@@ -1,5 +1,6 @@
 package com.project.danstagram.domain.auth.handler;
 
+import com.project.danstagram.domain.auth.entity.PrincipalDetails;
 import com.project.danstagram.global.auth.jwt.JwtToken;
 import com.project.danstagram.global.auth.jwt.JwtTokenProvider;
 import jakarta.servlet.ServletException;
@@ -9,8 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
@@ -24,13 +23,10 @@ public class NormalAuthSuccessHandler implements AuthenticationSuccessHandler {
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-        UserDetails principal = (UserDetails) authentication.getPrincipal();
+        PrincipalDetails principal = (PrincipalDetails) authentication.getPrincipal();
 
         String username = principal.getUsername();
-        String role = principal.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .findFirst()
-                .toString();
+        String role = principal.getMemberRole();
 
         JwtToken token = jwtTokenProvider.generateToken(username, role);
         log.info("user = {}, jwtToken = {}", username, token.getAccessToken());

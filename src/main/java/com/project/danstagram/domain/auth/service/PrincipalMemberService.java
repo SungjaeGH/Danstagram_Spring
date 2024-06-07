@@ -19,16 +19,7 @@ public class PrincipalMemberService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String memberInfo) {
         return memberRepository.findByMemberIdOrMemberPhoneOrMemberEmail(memberInfo, memberInfo, memberInfo)
-                .map(this::createUserDetails)
+                .map(PrincipalDetails::new)
                 .orElseThrow(() -> new UsernameNotFoundException("해당하는 회원을 찾을 수 없습니다."));
-    }
-
-    private UserDetails createUserDetails(Member member) {
-        PrincipalDetails principalDetails = new PrincipalDetails(member);
-        return User.builder()
-                .username(principalDetails.getUsername())
-                .password(principalDetails.getPassword())
-                .roles(String.valueOf(Role.USER))
-                .build();
     }
 }

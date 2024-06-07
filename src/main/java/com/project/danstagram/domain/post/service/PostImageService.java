@@ -8,16 +8,13 @@ import com.project.danstagram.domain.post.repository.PostImageRepository;
 import com.project.danstagram.global.file.ConstUtil;
 import com.project.danstagram.global.file.FileUploadUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -59,13 +56,13 @@ public class PostImageService {
                 .collect(Collectors.toList());
     }
 
-    public List<ByteArrayResource> getImagesList(Long postIdx) throws IOException {
+    public Map<String, String> getImagesList(Long postIdx) {
 
         String uploadPath = fileUploadUtil.getUploadPath(ConstUtil.UPLOAD_IMAGE_FLAG);
 
         File path = new File(uploadPath);
         File[] fileList = path.listFiles();
-        List<ByteArrayResource> matchesList = new ArrayList<>();
+        Map<String, String> matchesMap = new HashMap<>();
 
         if (fileList.length > 0) {
             for (File file : fileList) {
@@ -78,7 +75,9 @@ public class PostImageService {
 
                 try (FileInputStream fileInputStream = new FileInputStream(file)) {
                     byte[] fileToBytes = fileInputStream.readAllBytes();
-                    matchesList.add(new ByteArrayResource(fileToBytes));
+                    String encodeFile = Base64.getEncoder().encodeToString(fileToBytes);
+
+                    matchesMap.put(fileName, encodeFile);
 
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -86,6 +85,6 @@ public class PostImageService {
             }
         }
 
-        return  matchesList;
+        return matchesMap;
     }
 }
