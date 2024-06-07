@@ -1,5 +1,6 @@
 package com.project.danstagram.domain.post.entity;
 
+import com.project.danstagram.domain.comment.entity.Comment;
 import com.project.danstagram.domain.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.*;
@@ -37,8 +38,11 @@ public class Post {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PostImage> postImages = new ArrayList<>();
 
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comment = new ArrayList<>();
+
     @Builder
-    public Post(Long postIdx, String postContent, String postDate, String postUpdateDate, String postDeleteDate, Member member, List<PostImage> postImages) {
+    public Post(Long postIdx, String postContent, String postDate, String postUpdateDate, String postDeleteDate, Member member, List<PostImage> postImages, List<Comment> comment) {
         this.postIdx = postIdx;
         this.postContent = postContent;
         this.postDate = postDate;
@@ -46,6 +50,7 @@ public class Post {
         this.postDeleteDate = postDeleteDate;
         this.member = member;
         this.postImages = postImages;
+        this.comment = comment;
     }
 
     public void putMember(Member member) {
@@ -55,5 +60,10 @@ public class Post {
     public void putPostImage(PostImage postImage) {
         this.postImages.add(postImage);
         postImage.putPost(this);
+    }
+
+    public void putComment(Comment comment) {
+        this.comment.add(comment);
+        comment.putPost(this);
     }
 }

@@ -1,5 +1,7 @@
 package com.project.danstagram.domain.member.entity;
 
+import com.project.danstagram.domain.comment.entity.Comment;
+import com.project.danstagram.domain.comment.entity.CommentLike;
 import com.project.danstagram.domain.post.entity.Post;
 import jakarta.persistence.*;
 import lombok.*;
@@ -74,8 +76,14 @@ public class Member {
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Post> posts = new ArrayList<>();
 
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CommentLike> commentLikes = new ArrayList<>();
+
     @Builder
-    public Member(Long memberIdx, String memberId, String memberPhone, String memberEmail, String memberPw, Role memberRole, String memberName, String memberIntroduce, String memberWebsite, String memberGender, String memberImageUrl, String memberImageType, String memberImageName, String memberImageUuid, String memberStatus, LocalDateTime memberLoginDate, LocalDateTime memberLogoutDate, List<SocialMember> socialMembers) {
+    public Member(Long memberIdx, String memberId, String memberPhone, String memberEmail, String memberPw, Role memberRole, String memberName, String memberIntroduce, String memberWebsite, String memberGender, String memberImageUrl, String memberImageType, String memberImageName, String memberImageUuid, String memberStatus, LocalDateTime memberLoginDate, LocalDateTime memberLogoutDate, List<SocialMember> socialMembers, List<Post> posts, List<Comment> comments, List<CommentLike> commentLikes) {
         this.memberIdx = memberIdx;
         this.memberId = memberId;
         this.memberPhone = memberPhone;
@@ -94,6 +102,9 @@ public class Member {
         this.memberLoginDate = memberLoginDate;
         this.memberLogoutDate = memberLogoutDate;
         this.socialMembers = socialMembers;
+        this.posts = posts;
+        this.comments = comments;
+        this.commentLikes = commentLikes;
     }
 
     public void putSocialMember(SocialMember socialMember) {
@@ -104,6 +115,16 @@ public class Member {
     public void putPost(Post post) {
         this.posts.add(post);
         post.putMember(this);
+    }
+
+    public void putComment(Comment comment) {
+        this.comments.add(comment);
+        comment.putMember(this);
+    }
+
+    public void putCommentLike(CommentLike commentLike) {
+        this.commentLikes.add(commentLike);
+        commentLike.putMember(this);
     }
 
     public void changePw(String newEncodedPw) {
