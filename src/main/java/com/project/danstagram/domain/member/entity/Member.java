@@ -2,6 +2,7 @@ package com.project.danstagram.domain.member.entity;
 
 import com.project.danstagram.domain.comment.entity.Comment;
 import com.project.danstagram.domain.comment.entity.CommentLike;
+import com.project.danstagram.domain.follow.entity.Follow;
 import com.project.danstagram.domain.post.entity.Post;
 import jakarta.persistence.*;
 import lombok.*;
@@ -82,8 +83,14 @@ public class Member {
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CommentLike> commentLikes = new ArrayList<>();
 
+    @OneToMany(mappedBy = "followToUser", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Follow> followToUsers = new ArrayList<>();
+
+    @OneToMany(mappedBy = "followFromUser", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Follow> followFromUsers = new ArrayList<>();
+
     @Builder
-    public Member(Long memberIdx, String memberId, String memberPhone, String memberEmail, String memberPw, Role memberRole, String memberName, String memberIntroduce, String memberWebsite, String memberGender, String memberImageUrl, String memberImageType, String memberImageName, String memberImageUuid, String memberStatus, LocalDateTime memberLoginDate, LocalDateTime memberLogoutDate, List<SocialMember> socialMembers, List<Post> posts, List<Comment> comments, List<CommentLike> commentLikes) {
+    public Member(Long memberIdx, String memberId, String memberPhone, String memberEmail, String memberPw, Role memberRole, String memberName, String memberIntroduce, String memberWebsite, String memberGender, String memberImageUrl, String memberImageType, String memberImageName, String memberImageUuid, String memberStatus, LocalDateTime memberLoginDate, LocalDateTime memberLogoutDate, List<SocialMember> socialMembers, List<Post> posts, List<Comment> comments, List<CommentLike> commentLikes, List<Follow> followToUsers, List<Follow> followFromUsers) {
         this.memberIdx = memberIdx;
         this.memberId = memberId;
         this.memberPhone = memberPhone;
@@ -105,6 +112,8 @@ public class Member {
         this.posts = posts;
         this.comments = comments;
         this.commentLikes = commentLikes;
+        this.followToUsers = followToUsers;
+        this.followFromUsers = followFromUsers;
     }
 
     public void putSocialMember(SocialMember socialMember) {
@@ -125,6 +134,16 @@ public class Member {
     public void putCommentLike(CommentLike commentLike) {
         this.commentLikes.add(commentLike);
         commentLike.putMember(this);
+    }
+
+    public void putFollowToUsers(Follow followToUser) {
+        this.followToUsers.add(followToUser);
+        followToUser.putFollowToUser(this);
+    }
+
+    public void putFollowFromUsers(Follow followFromUser) {
+        this.followFromUsers.add(followFromUser);
+        followFromUser.putFollowFromUser(this);
     }
 
     public void changePw(String newEncodedPw) {

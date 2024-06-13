@@ -1,3 +1,9 @@
+buildscript {
+	ext {
+		queryDslVersion = "5.0.0"
+	}
+}
+
 plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.1.11'
@@ -47,8 +53,33 @@ dependencies {
 
 	// Validation
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	// QueryDsl
+	implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+	annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
+	annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+	annotationProcessor "jakarta.persistence:jakarta.persistence-api"
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+/**
+ * QeuryDsl Build Option
+ */
+def generated = 'src/main/generated'
+
+sourceSets {
+	main.java.srcDirs += [ generated ]
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.getGeneratedSourceOutputDirectory().set(file(generated))
+}
+
+clean {
+	delete file(generated)
+}
+
+
