@@ -26,8 +26,8 @@ public class FollowRepositoryImpl implements FollowRepositoryCustom {
         return queryFactory
                 .select(member2.memberId)
                 .from(member1)
-                    .innerJoin(follow).on(member1.memberIdx.eq(follow.followFromUser.memberIdx))
-                    .innerJoin(member2).on(follow.followToUser.memberIdx.eq(member2.memberIdx))
+                    .innerJoin(follow).on(member1.memberIdx.eq(follow.followToUser.memberIdx))
+                    .innerJoin(member2).on(follow.followFromUser.memberIdx.eq(member2.memberIdx))
                 .where(member1.memberId.eq(memberId))
                 .fetch();
     }
@@ -42,10 +42,36 @@ public class FollowRepositoryImpl implements FollowRepositoryCustom {
         return queryFactory
                 .select(member2.memberId)
                 .from(member1)
-                    .innerJoin(follow1).on(member1.memberIdx.eq(follow1.followFromUser.memberIdx))
-                    .innerJoin(follow2).on(follow1.followToUser.memberIdx.eq(follow2.followFromUser.memberIdx))
-                    .innerJoin(member2).on(follow2.followFromUser.memberIdx.eq(member2.memberIdx))
+                    .innerJoin(follow1).on(member1.memberIdx.eq(follow1.followToUser.memberIdx))
+                    .innerJoin(follow2).on(follow1.followToUser.memberIdx.eq(follow2.followFromUser.memberIdx)
+                        .and(follow1.followFromUser.memberIdx.eq(follow2.followToUser.memberIdx)))
+                    .innerJoin(member2).on(follow2.followToUser.memberIdx.eq(member2.memberIdx))
                 .where(member1.memberId.eq(memberId))
                 .fetch();
+    }
+
+    @Override
+    public Long countFollowers(Long memberIdx) {
+        QFollow follow = new QFollow("follow");
+
+        return queryFactory
+                .select(follow.countDistinct())
+                .from(follow)
+                .where(follow.followToUser.memberIdx.eq(memberIdx))
+                .fetchOne();
+    }
+
+    @Override
+    public Long countFollowings(Long memberIdx) {
+        QFollow follow1 = new QFollow("follow1");
+        QFollow follow2 = new QFollow("follow2");
+
+        return queryFactory
+                .select(follow1.countDistinct())
+                .from(follow1)
+                    .innerJoin(follow2).on(follow1.followToUser.memberIdx.eq(follow2.followFromUser.memberIdx)
+                        .and(follow1.followFromUser.memberIdx.eq(follow2.followToUser.memberIdx)))
+                .where(follow1.followFromUser.memberIdx.eq(memberIdx))
+                .fetchOne();
     }
 }

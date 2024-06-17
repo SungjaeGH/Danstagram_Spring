@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
@@ -16,33 +17,46 @@ import java.util.*;
 public class FileUploadUtil {
     private static final Logger logger = LoggerFactory.getLogger(FileUploadUtil.class);
 
+    public Map<String, Object> singleFileUpload(Long writerIdx, int pathFlag, MultipartFile multipartFile) throws IOException {
+
+        Map<String, Object> resultMap = new HashMap<>();
+
+        if (multipartFile == null || multipartFile.isEmpty()) {
+            resultMap.put("empty", "yes");
+
+        } else {
+            long fileSize = multipartFile.getSize();	        // 파일 크기
+            String oName = multipartFile.getOriginalFilename();	// 원래 파일명
+
+            // 변경된 파일이름 구하기
+            String fileName = getUniqueFileName(writerIdx, oName);
+
+            //업로드할 폴더 구하기
+            String uploadPath = getUploadPath(pathFlag);
+
+            // 파일 업로드 처리
+            File file = new File(uploadPath, fileName);
+            multipartFile.transferTo(file);
+
+            // 업로드된 파일 정보 -> Map에 저장
+            resultMap.put("empty", "no");
+            resultMap.put("fileName", fileName);
+            resultMap.put("fileSize", fileSize);
+            resultMap.put("originalFileName", oName);
+        }
+
+        return resultMap;
+    }
+
     public List<Map<String, Object>> multiFileUpload(Long writerIdx, List<MultipartFile> fileMap, int pathFlag) throws IllegalStateException, IOException {
 
         List<Map<String, Object>> list = new ArrayList<>();
 
         for (MultipartFile multipartFile : fileMap) {
-            if (!multipartFile.isEmpty()) {
-                long fileSize = multipartFile.getSize();	        // 파일 크기
-                String oName = multipartFile.getOriginalFilename();	// 원래 파일명
+            if (multipartFile != null && !multipartFile.isEmpty()) {
+                Map<String, Object> resultMap = singleFileUpload(writerIdx, pathFlag, multipartFile);
 
-                // 변경된 파일이름 구하기
-                String fileName = getUniqueFileName(writerIdx, oName);
-
-                //업로드할 폴더 구하기
-                String uploadPath = getUploadPath(pathFlag);
-
-                // 파일 업로드 처리
-                File file = new File(uploadPath, fileName);
-                multipartFile.transferTo(file);
-
-                // 업로드된 파일 정보 저장
-                // 1. Map에 저장
-                Map<String, Object> resultMap = new HashMap<>();
-                resultMap.put("fileName", fileName);
-                resultMap.put("fileSize", fileSize);
-                resultMap.put("originalFileName", oName);
-
-                // 2. 여러 개의 Map을 List에 저장
+                // 여러 개의 Map을 List에 저장
                 list.add(resultMap);
             }
         }
@@ -112,5 +126,20 @@ public class FileUploadUtil {
         }
 
         return false;
+    }
+
+    public String getFileEncoding(File file) {
+
+        String encodeFile = null;
+
+        try (FileInputStream fileInputStream = new FileInputStream(file)) {
+            byte[] fileToBytes = fileInputStream.readAllBytes();
+            encodeFile = Base64.getEncoder().encodeToString(fileToBytes);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return encodeFile;
     }
 }

@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -73,15 +72,9 @@ public class PostImageService {
                     continue;
                 }
 
-                try (FileInputStream fileInputStream = new FileInputStream(file)) {
-                    byte[] fileToBytes = fileInputStream.readAllBytes();
-                    String encodeFile = Base64.getEncoder().encodeToString(fileToBytes);
-
-                    matchesMap.put(fileName, encodeFile);
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                // 해당 파일의 bytes를 읽어 base64로 인코딩 후 map에 저장
+                String encodeFile = fileUploadUtil.getFileEncoding(file);
+                matchesMap.put(fileName, encodeFile);
             }
         }
 

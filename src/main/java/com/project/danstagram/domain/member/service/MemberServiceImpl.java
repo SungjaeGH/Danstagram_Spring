@@ -1,19 +1,25 @@
 package com.project.danstagram.domain.member.service;
 
-import com.project.danstagram.domain.member.dto.MemberResponseDto;
-import com.project.danstagram.domain.member.dto.ResetPwDto;
-import com.project.danstagram.domain.member.dto.SignUpDto;
+import com.project.danstagram.domain.follow.repository.FollowRepository;
+import com.project.danstagram.domain.member.dto.*;
 import com.project.danstagram.domain.member.entity.Member;
 import com.project.danstagram.domain.member.entity.SocialMember;
 import com.project.danstagram.domain.member.repository.MemberRepository;
 import com.project.danstagram.domain.member.repository.SocialMemberRepository;
+import com.project.danstagram.domain.post.repository.PostRepository;
+import com.project.danstagram.global.file.ConstUtil;
+import com.project.danstagram.global.file.FileUploadUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 @Service
@@ -23,9 +29,11 @@ import java.util.regex.Pattern;
 public class MemberServiceImpl implements MemberService {
     private final MemberRepository memberRepository;
     private final SocialMemberRepository socialMemberRepository;
+    private final FollowRepository followRepository;
+    private final PostRepository postRepository;
     private final PasswordEncoder passwordEncoder;
+    private final FileUploadUtil fileUploadUtil;
 
-    @Transactional
     @Override
     public MemberResponseDto signUp(SignUpDto signUpDto) {
         if (memberRepository.existsByMemberId(signUpDto.getMemberId())) {
@@ -78,7 +86,6 @@ public class MemberServiceImpl implements MemberService {
         return resultCode;
     }
 
-    @Transactional
     @Override
     public MemberResponseDto findMember(String memberInfo) {
         Member member = memberRepository.findByMemberIdOrMemberPhoneOrMemberEmail(memberInfo, memberInfo, memberInfo)
@@ -87,7 +94,6 @@ public class MemberServiceImpl implements MemberService {
         return MemberResponseDto.toResponseDto(member);
     }
 
-    @Transactional
     @Override
     public MemberResponseDto resetMemberPw(String memberId, ResetPwDto resetPwDto) {
         if (!resetPwDto.getNewMemberPw().equals(resetPwDto.getConfirmMemberPw())) {
@@ -101,5 +107,63 @@ public class MemberServiceImpl implements MemberService {
         changedMember.changePw(encodedNewPw);
 
         return MemberResponseDto.toResponseDto(memberRepository.save(changedMember));
+    }
+
+    @Override
+    public ProfileResponseDto updateProfile(String memberId, UpdateProfileDto updateProfileDto) {
+
+        Member updatedMember = memberRepository.findByMemberId(memberId)
+                .orElseThrow(() -> new UsernameNotFoundException("해당하는 회원을 찾을 수 없습니다."));
+
+        updatedMember.updateProfile(updateProfileDto);
+
+        return ProfileResponseDto.toResponseDto(memberRepository.save(updatedMember));
+    }
+
+    @Override
+    public ProfileResponseDto updateProfileImg(String memberId, MultipartFile imgFile) throws IOException {
+
+        Member updatedMember = memberRepository.findByMemberId(memberId)
+                .orElseThrow(() -> new UsernameNotFoundException("해당하는 회원을 찾을 수 없습니다."));
+
+        int fileFlag = ConstUtil.UPLOAD_IMAGE_FLAG;
+
+        // 이미지를 업로드할 디렉토리 존재 유무 확인
+        fileUploadUtil.checkDirectory(fileFlag, true);
+
+        // 변경할 이미지 정보 세팅
+        Map<String, Object> profileImg = fileUploadUtil.singleFileUpload(updatedMember.getMemberIdx(), fileFlag, imgFile);
+        updatedMember.updateProfileImg(profileImg);
+
+        return ProfileResponseDto.toResponseDto(memberRepository.save(updatedMember));
+    }
+
+    @Override
+    public ProfileResponseDto displayProfile(String memberId) {
+
+        Member member = memberRepository.findByMemberId(memberId)
+                .orElseThrow(() -> new UsernameNotFoundException("해당하는 회원을 찾을 수 없습니다."));
+
+        return ProfileResponseDto.builder()
+                    .memberId(memberId)
+                    .memberImg(getProfileImg(member.getMemberStoreImage()))
+                    .memberName(member.getMemberName())
+                    .memberIntroduce(member.getMemberIntroduce())
+                    .postCount(postRepository.countPostByWriter(member.getMemberIdx()))
+                    .followerCount(followRepository.countFollowers(member.getMemberIdx()))
+                    .followingCount(followRepository.countFollowings(member.getMemberIdx()))
+                .build();
+    }
+
+    private String getProfileImg(String imgName) {
+
+        if (imgName == null) {
+            return null;
+        }
+
+        String uploadPath = fileUploadUtil.getUploadPath(ConstUtil.UPLOAD_IMAGE_FLAG);
+        File imageFile = new File(uploadPath, imgName);
+
+        return fileUploadUtil.getFileEncoding(imageFile);
     }
 }

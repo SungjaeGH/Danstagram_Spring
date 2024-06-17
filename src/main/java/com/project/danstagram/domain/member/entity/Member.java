@@ -3,6 +3,7 @@ package com.project.danstagram.domain.member.entity;
 import com.project.danstagram.domain.comment.entity.Comment;
 import com.project.danstagram.domain.comment.entity.CommentLike;
 import com.project.danstagram.domain.follow.entity.Follow;
+import com.project.danstagram.domain.member.dto.UpdateProfileDto;
 import com.project.danstagram.domain.post.entity.Post;
 import jakarta.persistence.*;
 import lombok.*;
@@ -10,6 +11,8 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -50,17 +53,11 @@ public class Member {
     @Column(name = "member_gender")
     private String memberGender;
 
-    @Column(name = "member_image_url")
-    private String memberImageUrl;
+    @Column(name = "member_store_image")
+    private String memberStoreImage;
 
-    @Column(name = "member_image_type")
-    private String memberImageType;
-
-    @Column(name = "member_image_name")
-    private String memberImageName;
-
-    @Column(name = "member_image_uuid")
-    private String memberImageUuid;
+    @Column(name = "member_upload_image")
+    private String memberUploadImage;
 
     @Column(name = "member_status")
     private String memberStatus;
@@ -90,7 +87,7 @@ public class Member {
     private List<Follow> followFromUsers = new ArrayList<>();
 
     @Builder
-    public Member(Long memberIdx, String memberId, String memberPhone, String memberEmail, String memberPw, Role memberRole, String memberName, String memberIntroduce, String memberWebsite, String memberGender, String memberImageUrl, String memberImageType, String memberImageName, String memberImageUuid, String memberStatus, LocalDateTime memberLoginDate, LocalDateTime memberLogoutDate, List<SocialMember> socialMembers, List<Post> posts, List<Comment> comments, List<CommentLike> commentLikes, List<Follow> followToUsers, List<Follow> followFromUsers) {
+    public Member(Long memberIdx, String memberId, String memberPhone, String memberEmail, String memberPw, Role memberRole, String memberName, String memberIntroduce, String memberWebsite, String memberGender, String memberStoreImage, String memberUploadImage, String memberStatus, LocalDateTime memberLoginDate, LocalDateTime memberLogoutDate, List<SocialMember> socialMembers, List<Post> posts, List<Comment> comments, List<CommentLike> commentLikes, List<Follow> followToUsers, List<Follow> followFromUsers) {
         this.memberIdx = memberIdx;
         this.memberId = memberId;
         this.memberPhone = memberPhone;
@@ -101,10 +98,8 @@ public class Member {
         this.memberIntroduce = memberIntroduce;
         this.memberWebsite = memberWebsite;
         this.memberGender = memberGender;
-        this.memberImageUrl = memberImageUrl;
-        this.memberImageType = memberImageType;
-        this.memberImageName = memberImageName;
-        this.memberImageUuid = memberImageUuid;
+        this.memberStoreImage = memberStoreImage;
+        this.memberUploadImage = memberUploadImage;
         this.memberStatus = memberStatus;
         this.memberLoginDate = memberLoginDate;
         this.memberLogoutDate = memberLogoutDate;
@@ -148,5 +143,25 @@ public class Member {
 
     public void changePw(String newEncodedPw) {
         this.memberPw = newEncodedPw;
+    }
+
+    public void updateProfile(UpdateProfileDto updateProfileDto) {
+        Optional.ofNullable(updateProfileDto.getMemberWebsite())
+                .ifPresent(website -> this.memberWebsite = website);
+        Optional.ofNullable(updateProfileDto.getMemberIntroduce())
+                .ifPresent(introduce -> this.memberIntroduce = introduce);
+        Optional.ofNullable(updateProfileDto.getMemberGender())
+                .ifPresent(gender -> this.memberGender = gender);
+    }
+
+    public void updateProfileImg(Map<String, Object> profileImg) {
+        if (profileImg.get("empty").equals("yes")) {
+            this.memberStoreImage = null;
+            this.memberUploadImage = null;
+
+        } else {
+            this.memberStoreImage = (String) profileImg.get("fileName");
+            this.memberUploadImage = (String) profileImg.get("originalFileName");
+        }
     }
 }

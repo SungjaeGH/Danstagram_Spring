@@ -1,9 +1,10 @@
 package com.project.danstagram.domain.member.service;
 
-import com.project.danstagram.domain.member.dto.MemberResponseDto;
-import com.project.danstagram.domain.member.dto.ResetPwDto;
-import com.project.danstagram.domain.member.dto.SignUpDto;
+import com.project.danstagram.domain.member.dto.*;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 public interface MemberService {
     @Transactional
@@ -14,4 +15,13 @@ public interface MemberService {
 
     @Transactional
     MemberResponseDto resetMemberPw(String memberId, ResetPwDto resetPwDto);
+
+    @Transactional
+    ProfileResponseDto updateProfile(String memberId, UpdateProfileDto updateProfileDto);
+
+    @Transactional
+    ProfileResponseDto updateProfileImg(String memberId, MultipartFile imgFile) throws IOException;
+
+    @Transactional
+    ProfileResponseDto displayProfile(String memberId);
 }
