@@ -8,7 +8,7 @@ import java.util.ArrayList;
 @Getter
 @AllArgsConstructor
 public class CreatePostDto {
-    private Long writerIdx;
+    private String writerId;
     private String postContent;
 
     @Builder

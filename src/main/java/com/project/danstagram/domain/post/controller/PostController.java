@@ -3,7 +3,6 @@ package com.project.danstagram.domain.post.controller;
 import com.project.danstagram.domain.post.dto.CreatePostDto;
 import com.project.danstagram.domain.post.dto.PostResponseDto;
 import com.project.danstagram.domain.post.dto.UpdatePostDto;
-import com.project.danstagram.domain.post.service.PostImageService;
 import com.project.danstagram.domain.post.service.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +12,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @RestController
@@ -22,7 +20,6 @@ import java.util.Map;
 public class PostController {
 
     private final PostService postService;
-    private final PostImageService postImageService;
 
     @PostMapping("/create")
     public ResponseEntity<PostResponseDto> createPost(@RequestPart("body") CreatePostDto createPostDto,
@@ -37,20 +34,12 @@ public class PostController {
         return ResponseEntity.ok(createResult);
     }
 
-    @GetMapping("/find/{postIdx}")
+    @GetMapping("/{postIdx}/find")
     public ResponseEntity<PostResponseDto> findPost(@PathVariable Long postIdx) {
         return ResponseEntity.ok(postService.findPost(postIdx));
     }
 
-    @GetMapping("/display/images/{postIdx}")
-    public ResponseEntity<Map<String, String>> getPostImage(@PathVariable Long postIdx) {
-
-        Map<String, String> imagesMap = postImageService.getImagesList(postIdx);
-        return ResponseEntity.ok()
-                .body(imagesMap);
-    }
-
-    @PatchMapping("/update/{postIdx}")
+    @PatchMapping("/{postIdx}/update")
     public ResponseEntity<PostResponseDto> updatePost(@PathVariable Long postIdx,
                                                       @RequestBody UpdatePostDto updatePostDto) {
 

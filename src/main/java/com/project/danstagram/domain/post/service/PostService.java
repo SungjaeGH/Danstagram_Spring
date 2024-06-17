@@ -37,17 +37,18 @@ public class PostService {
         Post savedPost = postDto.toEntity(timeUtil.getCurrTime(TimeFormat.TimeFormat1));
 
         // 회원 존재 유무 확인 및 Member 엔티티의 post list에 저장
-        Member member = memberRepository.findById(postDto.getWriterIdx())
-                .orElseThrow(() -> new UsernameNotFoundException("회원번호 " + postDto.getWriterIdx() + " 를 찾을 수 없습니다."));
+        Member member = memberRepository.findByMemberId(postDto.getWriterId())
+                .orElseThrow(() -> new UsernameNotFoundException("해당하는 회원을 찾을 수 없습니다. id : " + postDto.getWriterId()));
         member.putPost(savedPost);
 
+        Post saved = postRepository.save(savedPost);
+
         // Multipart로 받은 이미지 파일 정보들을 PostImage Entity List로 세팅
-        List<PostImage> postImages = postImageService.setImageList(postDto.getWriterIdx(), imageFiles);
+        List<PostImage> postImages = postImageService.setImageList(saved.getPostIdx(), imageFiles);
 
         // Post Entity에 이미지 파일 정보들 저장
-        postImages.forEach(savedPost::putPostImage);
-
-        Post saved = postRepository.save(savedPost);
+        postImages.forEach(saved::putPostImage);
+        postRepository.save(saved);
 
         return PostResponseDto.createPostBuilder()
                 .postIdx(saved.getPostIdx())
@@ -65,7 +66,7 @@ public class PostService {
                 .postDate(findPost.getPostDate())
                 .postUpdateDate(findPost.getPostUpdateDate())
                 .postDeleteDate(findPost.getPostDeleteDate())
-                .postImageList(postImageService.findImageList(postIdx))
+                .postImageList(postImageService.getImagesList(postIdx))
                 .findPostBuild();
     }
 

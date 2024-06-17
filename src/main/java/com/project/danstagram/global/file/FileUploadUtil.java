@@ -17,7 +17,7 @@ import java.util.*;
 public class FileUploadUtil {
     private static final Logger logger = LoggerFactory.getLogger(FileUploadUtil.class);
 
-    public Map<String, Object> singleFileUpload(Long writerIdx, int pathFlag, MultipartFile multipartFile) throws IOException {
+    public Map<String, Object> singleFileUpload(Long targetIdx, int pathFlag, MultipartFile multipartFile) throws IOException {
 
         Map<String, Object> resultMap = new HashMap<>();
 
@@ -29,7 +29,7 @@ public class FileUploadUtil {
             String oName = multipartFile.getOriginalFilename();	// 원래 파일명
 
             // 변경된 파일이름 구하기
-            String fileName = getUniqueFileName(writerIdx, oName);
+            String fileName = getUniqueFileName(targetIdx, oName);
 
             //업로드할 폴더 구하기
             String uploadPath = getUploadPath(pathFlag);
@@ -48,13 +48,13 @@ public class FileUploadUtil {
         return resultMap;
     }
 
-    public List<Map<String, Object>> multiFileUpload(Long writerIdx, List<MultipartFile> fileMap, int pathFlag) throws IllegalStateException, IOException {
+    public List<Map<String, Object>> multiFileUpload(Long targetIdx, List<MultipartFile> fileMap, int pathFlag) throws IllegalStateException, IOException {
 
         List<Map<String, Object>> list = new ArrayList<>();
 
         for (MultipartFile multipartFile : fileMap) {
             if (multipartFile != null && !multipartFile.isEmpty()) {
-                Map<String, Object> resultMap = singleFileUpload(writerIdx, pathFlag, multipartFile);
+                Map<String, Object> resultMap = singleFileUpload(targetIdx, pathFlag, multipartFile);
 
                 // 여러 개의 Map을 List에 저장
                 list.add(resultMap);
@@ -64,7 +64,7 @@ public class FileUploadUtil {
         return list;
     }
 
-    public String getUniqueFileName(Long writerIdx, String fileName) {
+    public String getUniqueFileName(Long targetIdx, String fileName) {
         // 파일명이 중복될 경우 파일이름 변경하기
         // 파일명 앞 : 게시물 작성자 Index 붙이기
         // 파일명 뒤 : 현재시간(년원일 시분초 밀리초) 붙이기
@@ -81,7 +81,7 @@ public class FileUploadUtil {
         TimeUtil timeUtil = new TimeUtil();
         String today = timeUtil.getCurrTime(TimeFormat.TimeFormat2);
 
-        String result = writerIdx + "_" + fileNm + "_" + today + ext;
+        String result = targetIdx + "_" + fileNm + "_" + today + ext;
         logger.info("변경된 파일명 : " + result);
 
         return result;
