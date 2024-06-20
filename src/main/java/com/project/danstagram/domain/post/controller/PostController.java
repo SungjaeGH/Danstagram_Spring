@@ -1,6 +1,7 @@
 package com.project.danstagram.domain.post.controller;
 
 import com.project.danstagram.domain.post.dto.CreatePostDto;
+import com.project.danstagram.domain.post.dto.PostListResponseDto;
 import com.project.danstagram.domain.post.dto.PostResponseDto;
 import com.project.danstagram.domain.post.dto.UpdatePostDto;
 import com.project.danstagram.domain.post.service.PostService;
@@ -44,5 +45,15 @@ public class PostController {
                                                       @RequestBody UpdatePostDto updatePostDto) {
 
         return ResponseEntity.ok(postService.updatePost(postIdx, updatePostDto));
+    }
+
+    @GetMapping("/profile/{memberId}")
+    public ResponseEntity<PostListResponseDto> findPostForProfile(@PathVariable String memberId,
+                                                @RequestParam(name = "scroll-size") int scrollSize,
+                                                @RequestParam(name = "last-postidx", required = false) Long lastPostIdx) {
+
+        PostListResponseDto postForProfile = postService.findPostForProfile(memberId, scrollSize, lastPostIdx);
+
+        return ResponseEntity.ok(postForProfile);
     }
 }

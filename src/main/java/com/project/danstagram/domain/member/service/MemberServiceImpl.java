@@ -149,7 +149,7 @@ public class MemberServiceImpl implements MemberService {
                     .memberImg(getProfileImg(member.getMemberStoreImage()))
                     .memberName(member.getMemberName())
                     .memberIntroduce(member.getMemberIntroduce())
-                    .postCount(postRepository.countPostByWriter(member.getMemberIdx()))
+                    .postCount(postRepository.countPostByWriterIdx(member.getMemberIdx()))
                     .followerCount(followRepository.countFollowers(member.getMemberIdx()))
                     .followingCount(followRepository.countFollowings(member.getMemberIdx()))
                 .build();

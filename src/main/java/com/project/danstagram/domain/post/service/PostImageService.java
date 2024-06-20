@@ -44,7 +44,7 @@ public class PostImageService {
     public List<PostImageResponseDto> getImagesList(Long postIdx) {
 
         // 서버에서 이미지 이름에 postIdx가 포함되어 있는 이미지 찾기
-        Map<String, String> storedImgsMap = findStoredImg(postIdx);
+        Map<String, String> storedImgsMap = findStoredImgs(postIdx);
 
         List<PostImage> imgList = postImageRepository.findByPostIdx(postIdx);
         if (imgList.isEmpty()) {
@@ -55,7 +55,19 @@ public class PostImageService {
         return setValidImgList(imgList, storedImgsMap);
     }
 
-    private Map<String, String> findStoredImg(Long postIdx) {
+    public String getFirstEncodingImage(Long postIdx) {
+
+        PostImage topImg = postImageRepository.findTopImg(postIdx)
+                .orElseThrow(() -> new PostImageNotFoundException("해당 게시물에 이미지 정보가 존재하지 않습니다. postIdx : " + postIdx));
+
+        // TODO: 2024-06-20 예외처리 필요
+        String uploadPath = fileUploadUtil.getUploadPath(ConstUtil.UPLOAD_IMAGE_FLAG);
+        File file = new File(uploadPath, topImg.getStoreImageFile());
+
+        return fileUploadUtil.getFileEncoding(file);
+    }
+
+    private Map<String, String> findStoredImgs(Long postIdx) {
         String uploadPath = fileUploadUtil.getUploadPath(ConstUtil.UPLOAD_IMAGE_FLAG);
 
         File path = new File(uploadPath);
