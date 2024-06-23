@@ -5,6 +5,7 @@ import com.project.danstagram.domain.auth.handler.NormalAuthSuccessHandler;
 import com.project.danstagram.domain.auth.handler.OAuth2AuthSuccessHandler;
 import com.project.danstagram.domain.auth.service.PrincipalOAuthMemberService;
 import com.project.danstagram.global.auth.jwt.JwtAuthenticationFilter;
+import com.project.danstagram.global.auth.jwt.JwtExceptionFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -29,6 +30,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtExceptionFilter jwtExceptionFilter;
     private final PrincipalOAuthMemberService principalOAuthMemberService;
     private final NormalAuthSuccessHandler normalAuthSuccessHandler;
     private final OAuth2AuthSuccessHandler oAuth2AuthSuccessHandler;
@@ -54,6 +56,7 @@ public class SecurityConfig {
                         .requestMatchers("/login/**").permitAll()
                         // USER 권한이 있어야 요청할 수 있음
                         .requestMatchers("/api/member/req").hasRole("USER")
+                        .requestMatchers("/api/p/**").hasRole("USER")
                         // 이 밖에 모든 요청에 대해서 인증을 필요로 한다는 설정
                         .anyRequest().authenticated()
                 )
@@ -83,6 +86,7 @@ public class SecurityConfig {
 
                 // JWT 인증을 위하여 직접 구현한 필터를 UsernamePasswordAuthenticationFilter 전에 실행
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtExceptionFilter, JwtAuthenticationFilter.class)
                 .build();
     }
 
@@ -101,7 +105,7 @@ public class SecurityConfig {
 
         config.setAllowCredentials(true);
         config.setAllowedOrigins(List.of("http://localhost:3000"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("*"));
 

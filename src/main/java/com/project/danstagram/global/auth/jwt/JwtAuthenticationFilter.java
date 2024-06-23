@@ -1,5 +1,6 @@
 package com.project.danstagram.global.auth.jwt;
 
+import com.project.danstagram.domain.auth.entity.SecurityMemberDto;
 import com.project.danstagram.domain.member.entity.Member;
 import com.project.danstagram.domain.member.repository.MemberRepository;
 import io.jsonwebtoken.JwtException;
@@ -20,9 +21,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 
-@RequiredArgsConstructor
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenProvider jwtTokenProvider;
     private final MemberRepository memberRepository;
@@ -49,14 +50,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 .orElseThrow(IllegalStateException::new);
 
         // SecurityContext에 인증 객체를 등록해준다.
-        Authentication auth = getAuthentication(member);
+        Authentication auth = getAuthentication(SecurityMemberDto.toEntity(member));
         SecurityContextHolder.getContext().setAuthentication(auth);
 
         filterChain.doFilter(request, response);
     }
 
-    public Authentication getAuthentication(Member member) {
+    public Authentication getAuthentication(SecurityMemberDto member) {
         return new UsernamePasswordAuthenticationToken(member, "",
-                List.of(new SimpleGrantedAuthority(member.getMemberRole().toString())));
+                List.of(new SimpleGrantedAuthority(member.getMemberRole())));
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        return request.getRequestURI().contains("auth/");
     }
 }
