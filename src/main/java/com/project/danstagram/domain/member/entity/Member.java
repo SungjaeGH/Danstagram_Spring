@@ -63,10 +63,10 @@ public class Member {
     private String memberStatus;
 
     @Column(name = "member_login_date")
-    private LocalDateTime memberLoginDate;
+    private String memberLoginDate;
 
     @Column(name = "member_logout_date")
-    private LocalDateTime memberLogoutDate;
+    private String memberLogoutDate;
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SocialMember> socialMembers = new ArrayList<>();
@@ -87,7 +87,7 @@ public class Member {
     private List<Follow> followFromUsers = new ArrayList<>();
 
     @Builder
-    public Member(Long memberIdx, String memberId, String memberPhone, String memberEmail, String memberPw, Role memberRole, String memberName, String memberIntroduce, String memberWebsite, String memberGender, String memberStoreImage, String memberUploadImage, String memberStatus, LocalDateTime memberLoginDate, LocalDateTime memberLogoutDate, List<SocialMember> socialMembers, List<Post> posts, List<Comment> comments, List<CommentLike> commentLikes, List<Follow> followToUsers, List<Follow> followFromUsers) {
+    public Member(Long memberIdx, String memberId, String memberPhone, String memberEmail, String memberPw, Role memberRole, String memberName, String memberIntroduce, String memberWebsite, String memberGender, String memberStoreImage, String memberUploadImage, String memberStatus, String memberLoginDate, String memberLogoutDate, List<SocialMember> socialMembers, List<Post> posts, List<Comment> comments, List<CommentLike> commentLikes, List<Follow> followToUsers, List<Follow> followFromUsers) {
         this.memberIdx = memberIdx;
         this.memberId = memberId;
         this.memberPhone = memberPhone;
@@ -163,5 +163,15 @@ public class Member {
             this.memberStoreImage = (String) profileImg.get("fileName");
             this.memberUploadImage = (String) profileImg.get("originalFileName");
         }
+    }
+
+    public void changeLoginState(String currTime) {
+        this.memberLoginDate = currTime;
+        this.memberStatus = "Login";
+    }
+
+    public void changeLogoutState(String currTime) {
+        this.memberLogoutDate = currTime;
+        this.memberStatus = "Logout";
     }
 }
