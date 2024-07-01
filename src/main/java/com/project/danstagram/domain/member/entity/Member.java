@@ -2,13 +2,16 @@ package com.project.danstagram.domain.member.entity;
 
 import com.project.danstagram.domain.comment.entity.Comment;
 import com.project.danstagram.domain.comment.entity.CommentLike;
+import com.project.danstagram.domain.dm.entity.Dm;
+import com.project.danstagram.domain.dm.entity.DmGroup;
+import com.project.danstagram.domain.dm.entity.DmGroupMember;
+import com.project.danstagram.domain.dm.entity.DmLike;
 import com.project.danstagram.domain.follow.entity.Follow;
 import com.project.danstagram.domain.member.dto.UpdateProfileDto;
 import com.project.danstagram.domain.post.entity.Post;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -86,8 +89,20 @@ public class Member {
     @OneToMany(mappedBy = "followFromUser", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Follow> followFromUsers = new ArrayList<>();
 
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DmGroup> dmGroups = new ArrayList<>();
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DmGroupMember> dmGroupMembers = new ArrayList<>();
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Dm> dms = new ArrayList<>();
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DmLike> dmLikes = new ArrayList<>();
+
     @Builder
-    public Member(Long memberIdx, String memberId, String memberPhone, String memberEmail, String memberPw, Role memberRole, String memberName, String memberIntroduce, String memberWebsite, String memberGender, String memberStoreImage, String memberUploadImage, String memberStatus, String memberLoginDate, String memberLogoutDate, List<SocialMember> socialMembers, List<Post> posts, List<Comment> comments, List<CommentLike> commentLikes, List<Follow> followToUsers, List<Follow> followFromUsers) {
+    public Member(Long memberIdx, String memberId, String memberPhone, String memberEmail, String memberPw, Role memberRole, String memberName, String memberIntroduce, String memberWebsite, String memberGender, String memberStoreImage, String memberUploadImage, String memberStatus, String memberLoginDate, String memberLogoutDate, List<SocialMember> socialMembers, List<Post> posts, List<Comment> comments, List<CommentLike> commentLikes, List<Follow> followToUsers, List<Follow> followFromUsers, List<DmGroup> dmGroups, List<DmGroupMember> dmGroupMembers, List<Dm> dms, List<DmLike> dmLikes) {
         this.memberIdx = memberIdx;
         this.memberId = memberId;
         this.memberPhone = memberPhone;
@@ -109,6 +124,10 @@ public class Member {
         this.commentLikes = commentLikes;
         this.followToUsers = followToUsers;
         this.followFromUsers = followFromUsers;
+        this.dmGroups = dmGroups;
+        this.dmGroupMembers = dmGroupMembers;
+        this.dms = dms;
+        this.dmLikes = dmLikes;
     }
 
     public void putSocialMember(SocialMember socialMember) {
@@ -136,9 +155,24 @@ public class Member {
         followToUser.putFollowToUser(this);
     }
 
-    public void putFollowFromUsers(Follow followFromUser) {
-        this.followFromUsers.add(followFromUser);
-        followFromUser.putFollowFromUser(this);
+    public void putDmGroups(DmGroup dmGroup) {
+        this.dmGroups.add(dmGroup);
+        dmGroup.putMember(this);
+    }
+
+    public void putDmGroupMember(DmGroupMember dmGroupMember) {
+        this.dmGroupMembers.add(dmGroupMember);
+        dmGroupMember.putMember(this);
+    }
+
+    public void putDm(Dm dm) {
+        this.dms.add(dm);
+        dm.putMember(this);
+    }
+
+    public void putDmLike(DmLike dmLike) {
+        this.dmLikes.add(dmLike);
+        dmLike.putMember(this);
     }
 
     public void changePw(String newEncodedPw) {

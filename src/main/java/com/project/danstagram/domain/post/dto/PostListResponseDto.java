@@ -44,6 +44,5 @@ public class PostListResponseDto {
                     .nextCursor(nextCursor)
                     .contents(postScroll)
                 .build();
-
     }
 }

@@ -23,7 +23,8 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
 
         return queryFactory
                 .select(post)
-                .from(post).innerJoin(member).on(post.member.memberIdx.eq(member.memberIdx))
+                .from(post)
+                    .innerJoin(member).on(post.member.memberIdx.eq(member.memberIdx))
                 .where(
                         ltPostIdx(lastPostIdx),
                         member.memberId.eq(memberId)

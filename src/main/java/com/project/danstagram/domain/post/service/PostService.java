@@ -9,6 +9,7 @@ import com.project.danstagram.domain.post.entity.PostImage;
 import com.project.danstagram.domain.post.exception.PostNotFoundException;
 import com.project.danstagram.domain.post.repository.PostLikeRepository;
 import com.project.danstagram.domain.post.repository.PostRepository;
+import com.project.danstagram.global.scroll.PageRequestUtil;
 import com.project.danstagram.global.scroll.ScrollPaginationCollection;
 import com.project.danstagram.global.time.TimeFormat;
 import com.project.danstagram.global.time.TimeUtil;
@@ -91,8 +92,7 @@ public class PostService {
     @Transactional
     public PostListResponseDto findPostForProfile(String memberId, int scrollSize, Long lastPostIdx) {
 
-        // 다음 스크롤의 요소를 확인하기 위해 조회할 데이터 수 + 1
-        PageRequest pageRequest = PageRequest.of(0, scrollSize + 1);
+        PageRequest pageRequest = PageRequestUtil.setPageRequest(scrollSize);
         List<Post> postList = postRepository.findPostList(memberId, lastPostIdx, pageRequest);
 
         ScrollPaginationCollection<PostInfoResponseDto> postsCursor = ScrollPaginationCollection.of(setPostsInfo(postList), scrollSize);
