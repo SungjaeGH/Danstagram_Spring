@@ -1,19 +1,24 @@
 package com.project.danstagram.domain.comment.service;
 
-import com.project.danstagram.domain.comment.dto.CommentResponseDto;
-import com.project.danstagram.domain.comment.dto.CreateCommentDto;
+import com.project.danstagram.domain.comment.dto.CommentRequest;
+import com.project.danstagram.domain.comment.dto.CommentResponse;
 import com.project.danstagram.domain.comment.entity.Comment;
 import com.project.danstagram.domain.comment.exception.CommentNotFoundException;
 import com.project.danstagram.domain.comment.repository.CommentRepository;
+import com.project.danstagram.domain.comment.repository.CommentRepositoryCustom;
 import com.project.danstagram.domain.member.entity.Member;
 import com.project.danstagram.domain.member.repository.MemberRepository;
+import com.project.danstagram.domain.member.service.MemberService;
 import com.project.danstagram.domain.post.entity.Post;
 import com.project.danstagram.domain.post.exception.PostNotFoundException;
 import com.project.danstagram.domain.post.repository.PostRepository;
+import com.project.danstagram.global.scroll.PageRequestUtil;
+import com.project.danstagram.global.scroll.ScrollPaginationCollection;
 import com.project.danstagram.global.time.TimeFormat;
 import com.project.danstagram.global.time.TimeUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,10 +34,12 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
+    private final CommentRepositoryCustom commentRepositoryCustom;
+    private final MemberService memberService;
     private final TimeUtil timeUtil;
 
     @Transactional
-    public CommentResponseDto createComment(Long postIdx, String writerId, CreateCommentDto createCommentDto) {
+    public CommentResponse.CreateComment createComment(Long postIdx, String writerId, CommentRequest.CreateComment createCommentDto) {
 
         Comment savedComment = createCommentDto.toEntity(timeUtil.getCurrTime(TimeFormat.TimeFormat1));
 
@@ -45,8 +52,8 @@ public class CommentService {
                 .orElseThrow(() -> new UsernameNotFoundException("해당 회원을 찾을 수 없습니다. Id: " + writerId));
 
         // 부모 댓글이 존재하면 추가
-        if (createCommentDto.getCommentParentIdx() != null) {
-            Long parentIdx = createCommentDto.getCommentParentIdx();
+        if (createCommentDto.commentContent() != null) {
+            Long parentIdx = createCommentDto.commentParentIdx();
 
             Comment parentComment = commentRepository.findById(parentIdx)
                     .orElseThrow(() -> new CommentNotFoundException("부모 댓글을 찾을 수 없습니다. Parent Idx: " + parentIdx));
@@ -57,8 +64,8 @@ public class CommentService {
         member.putComment(savedComment);
 
         // 댓글 저장
-        return CommentResponseDto.toResponseDto(
-                commentRepository.save(savedComment)
+        return CommentResponse.CreateComment
+                .toResponseDto(commentRepository.save(savedComment)
         );
     }
 
@@ -97,5 +104,45 @@ public class CommentService {
             }
         }
         commentRepository.delete(comment);
+    }
+
+    @Transactional
+    public CommentResponse.CommentList findComments(CommentRequest.FindComments request) {
+
+        PageRequest pageRequest = PageRequestUtil.setPageRequest(request.scrollSize());
+        List<CommentResponse.CommentInfo> commentInfo =
+                commentRepositoryCustom.findCommentsWithScroll(request.postIdx(), request.lastCommentIdx(), pageRequest);
+
+        Long nextCursor = -1L;
+        ScrollPaginationCollection<CommentResponse.CommentInfo> cursor = ScrollPaginationCollection.of(commentInfo, request.scrollSize());
+        if (!cursor.isLastScroll()) {
+            nextCursor = cursor.getNextCursor().getCommentIdx();
+        }
+
+        List<CommentResponse.CommentInfo> currentScrollItems = cursor.getCurrentScrollItems();
+
+        return CommentResponse.CommentList.builder()
+                .totalElements(request.scrollSize())
+                .nextCursor(nextCursor)
+                .commentInfos(appendChildComments(currentScrollItems))
+                .build();
+    }
+
+    private List<CommentResponse.CommentInfo> appendChildComments(List<CommentResponse.CommentInfo> currentScrollItems) {
+
+        for (CommentResponse.CommentInfo commentInfo : currentScrollItems) {
+            // 자식 댓글 조회
+            List<CommentResponse.CommentInfo> childComments = commentRepositoryCustom.findChildComments(commentInfo.getCommentIdx());
+            if (!childComments.isEmpty()) {
+                // 자식 댓글 존재할 경우, 해당 댓글의 자식 댓글 조회
+                List<CommentResponse.CommentInfo> addList = appendChildComments(childComments);
+                commentInfo.setChildCommentInfos(addList);
+            }
+
+            // 이미지 파일 인코딩
+            commentInfo.setWriterImg(memberService.getProfileImg(commentInfo.getWriterImg()));
+        }
+
+        return currentScrollItems;
     }
 }

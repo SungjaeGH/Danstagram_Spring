@@ -1,6 +1,6 @@
 package com.project.danstagram.domain.comment.service;
 
-import com.project.danstagram.domain.comment.dto.UpdateCommentLikeDto;
+import com.project.danstagram.domain.comment.dto.CommentRequest;
 import com.project.danstagram.domain.comment.entity.Comment;
 import com.project.danstagram.domain.comment.exception.CommentNotFoundException;
 import com.project.danstagram.domain.comment.repository.CommentLikeRepository;
@@ -28,7 +28,7 @@ public class CommentLikeService {
     private final MemberRepository memberRepository;
 
     @Transactional
-    public boolean updateCommentLike(Map<String, String> pathVarsMap, UpdateCommentLikeDto updateCommentLikeDto) {
+    public boolean updateCommentLike(Map<String, String> pathVarsMap, CommentRequest.UpdateCommentLike updateCommentLikeDto) {
 
         // 게시글 존재 유무 확인
         Long postIdx = Long.parseLong(pathVarsMap.get("postIdx"));
