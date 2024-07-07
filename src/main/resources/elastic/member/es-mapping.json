@@ -1,0 +1,62 @@
+{
+  "properties": {
+    "memberIdx": {
+      "type": "long"
+    },
+    "memberId": {
+      "type": "text",
+      "fields": {
+        "keyword": {
+          "type": "keyword",
+          "ignore_above": 256
+        },
+        "jaso": {
+          "type": "text",
+          "analyzer": "jaso_index_analyzer",
+          "search_analyzer": "jaso_search_analyzer"
+        },
+        "nori": {
+          "type": "text",
+          "analyzer": "nori_analyzer"
+        }
+      }
+    },
+    "memberName": {
+      "type": "text",
+      "fields": {
+        "keyword": {
+          "type": "keyword",
+          "ignore_above": 256
+        },
+        "jaso": {
+          "type": "text",
+          "analyzer": "jaso_index_analyzer",
+          "search_analyzer": "jaso_search_analyzer"
+        },
+        "nori": {
+          "type": "text",
+          "analyzer": "nori_analyzer"
+        }
+      }
+    },
+    "memberStoreImage": {
+      "type": "keyword"
+    },
+    "followToUsers": {
+      "type": "nested",
+      "properties": {
+        "followId": {
+          "type": "long"
+        }
+      }
+    },
+    "followFromUsers": {
+      "type": "nested",
+      "properties": {
+        "followId": {
+          "type": "long"
+        }
+      }
+    }
+  }
+}

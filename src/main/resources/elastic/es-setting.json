@@ -1,0 +1,64 @@
+{
+  "index": {
+    "number_of_shards": 1,
+    "number_of_replicas": 1,
+
+    "analysis": {
+
+      "analyzer": {
+        "nori_analyzer": {
+          "type": "custom",
+          "tokenizer": "nori_tokenizer",
+          "filter": "nori_filter"
+        },
+
+        "jaso_search_analyzer": {
+          "type": "custom",
+          "tokenizer": "jaso_search_tokenizer"
+        },
+        "jaso_index_analyzer": {
+          "type": "custom",
+          "tokenizer": "jaso_index_tokenizer",
+          "filter": [
+            "jaso_filter"
+          ]
+        }
+      },
+
+      "tokenizer": {
+        "nori_tokenizer": {
+          "type": "nori_tokenizer",
+          "decompound_mode": "mixed"
+        },
+
+        "jaso_search_tokenizer": {
+          "type": "jaso_tokenizer",
+          "mistype": true,
+          "chosung": false
+        },
+        "jaso_index_tokenizer": {
+          "type": "jaso_tokenizer",
+          "mistype": true,
+          "chosung": true
+        }
+      },
+
+      "filter": {
+        "nori_filter": {
+          "type": "nori_part_of_speech",
+          "stoptags": [
+            "E", "IC", "J", "MAG", "MM", "NA", "NR", "SC", "SE", "SF", "SH", "SL", "SN",
+            "SP", "SSC", "SSO", "SY", "UNA", "UNKNOWN", "VA", "VCN", "VCP", "VSV", "VV",
+            "VX", "XPN", "XR", "XSA", "XSN", "XSV"
+          ]
+        },
+
+        "jaso_filter": {
+          "type": "edge_ngram",
+          "min_gram": 1,
+          "max_gram": 50
+        }
+      }
+    }
+  }
+}

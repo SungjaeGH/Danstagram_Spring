@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PostListResponseDto {
 
@@ -20,6 +19,7 @@ public class PostListResponseDto {
     private Long nextCursor;
     private List<PostInfoResponseDto> contents = new ArrayList<>();
 
+    @Builder
     public PostListResponseDto(Long totalElements, Long nextCursor, List<PostInfoResponseDto> contents) {
         this.totalElements = totalElements;
         this.nextCursor = nextCursor;

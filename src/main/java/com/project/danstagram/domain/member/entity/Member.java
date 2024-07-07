@@ -9,8 +9,12 @@ import com.project.danstagram.domain.dm.entity.DmLike;
 import com.project.danstagram.domain.follow.entity.Follow;
 import com.project.danstagram.domain.member.dto.UpdateProfileDto;
 import com.project.danstagram.domain.post.entity.Post;
+import com.project.danstagram.domain.search.entity.Search;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Mapping;
+import org.springframework.data.elasticsearch.annotations.Setting;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -101,8 +105,11 @@ public class Member {
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DmLike> dmLikes = new ArrayList<>();
 
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Search> searches = new ArrayList<>();
+
     @Builder
-    public Member(Long memberIdx, String memberId, String memberPhone, String memberEmail, String memberPw, Role memberRole, String memberName, String memberIntroduce, String memberWebsite, String memberGender, String memberStoreImage, String memberUploadImage, String memberStatus, String memberLoginDate, String memberLogoutDate, List<SocialMember> socialMembers, List<Post> posts, List<Comment> comments, List<CommentLike> commentLikes, List<Follow> followToUsers, List<Follow> followFromUsers, List<DmGroup> dmGroups, List<DmGroupMember> dmGroupMembers, List<Dm> dms, List<DmLike> dmLikes) {
+    public Member(Long memberIdx, String memberId, String memberPhone, String memberEmail, String memberPw, Role memberRole, String memberName, String memberIntroduce, String memberWebsite, String memberGender, String memberStoreImage, String memberUploadImage, String memberStatus, String memberLoginDate, String memberLogoutDate, List<SocialMember> socialMembers, List<Post> posts, List<Comment> comments, List<CommentLike> commentLikes, List<Follow> followToUsers, List<Follow> followFromUsers, List<DmGroup> dmGroups, List<DmGroupMember> dmGroupMembers, List<Dm> dms, List<DmLike> dmLikes, List<Search> searches) {
         this.memberIdx = memberIdx;
         this.memberId = memberId;
         this.memberPhone = memberPhone;
@@ -128,6 +135,7 @@ public class Member {
         this.dmGroupMembers = dmGroupMembers;
         this.dms = dms;
         this.dmLikes = dmLikes;
+        this.searches = searches;
     }
 
     public void putSocialMember(SocialMember socialMember) {
@@ -173,6 +181,11 @@ public class Member {
     public void putDmLike(DmLike dmLike) {
         this.dmLikes.add(dmLike);
         dmLike.putMember(this);
+    }
+
+    public void putSearch(Search search) {
+        this.searches.add(search);
+        search.putMember(this);
     }
 
     public void changePw(String newEncodedPw) {
