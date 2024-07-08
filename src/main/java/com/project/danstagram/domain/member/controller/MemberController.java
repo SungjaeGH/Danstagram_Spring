@@ -21,7 +21,7 @@ public class MemberController {
     private final MemberService memberService;
 
     @PostMapping("/register")
-    public ResponseEntity<MemberResponseDto> register(@RequestBody @Valid SignUpDto signUpDto, Errors errors) {
+    public ResponseEntity<MemberResponse.SignUp> register(@RequestBody @Valid MemberRequest.SignUp signUpDto, Errors errors) {
         if (errors.hasErrors()) {
             return ResponseEntity.badRequest().build();
         }
@@ -29,56 +29,59 @@ public class MemberController {
         return ResponseEntity.ok(memberService.signUp(signUpDto));
     }
 
-    @GetMapping("/find")
-    public ResponseEntity<MemberResponseDto> findMember(@RequestParam String memberInfo) {
-        MemberResponseDto memberResponseDto = memberService.findMember(memberInfo);
-        if (memberResponseDto.getMemberName() == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(memberResponseDto);
-    }
-
     @PatchMapping("/{memberId}/password/reset")
-    public ResponseEntity<MemberResponseDto> resetPw(@PathVariable String memberId,
-                                                     @RequestBody @Valid ResetPwDto resetPwDto,
-                                                     Errors errors) {
+    public ResponseEntity<MemberResponse.ResetPw> resetPw(@PathVariable String memberId,
+                                                          @RequestBody @Valid MemberRequest.ResetPw resetPwDto,
+                                                          Errors errors) {
         if (errors.hasErrors()) {
             return ResponseEntity.badRequest().build();
         }
 
-        return ResponseEntity.ok(memberService.resetMemberPw(memberId, resetPwDto));
+        return ResponseEntity.ok(memberService.resetMemberPw(resetPwDto.appendDto(memberId)));
     }
 
     @PatchMapping("/{memberId}/profile/update")
-    public ResponseEntity<ProfileResponseDto> updateProfile(@PathVariable String memberId, @RequestBody UpdateProfileDto updateProfileDto) {
+    public ResponseEntity<MemberResponse.UpdateProfile> updateProfile(@PathVariable String memberId,
+                                                                      @RequestBody MemberRequest.UpdateProfile updateProfileDto) {
 
-        ProfileResponseDto profileResponseDto = memberService.updateProfile(memberId, updateProfileDto);
-
-        if (profileResponseDto.getMemberId() == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(profileResponseDto);
+        return ResponseEntity.ok(memberService.updateProfile(updateProfileDto.appendDto(memberId)));
     }
 
     @PatchMapping("/{memberId}/profile/image/update")
-    public ResponseEntity<ProfileResponseDto> updateProfileImage(@PathVariable String memberId,
-                                                                @RequestPart("image") MultipartFile imageFile) throws IOException {
+    public ResponseEntity<MemberResponse.UpdateProfileImg> updateProfileImage(@PathVariable String memberId,
+                                                                              @RequestPart("image") MultipartFile imageFile) throws IOException {
 
-        ProfileResponseDto profileResponseDto = memberService.updateProfileImg(memberId, imageFile);
-
-        if (profileResponseDto.getMemberId() == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(profileResponseDto);
+        return ResponseEntity.ok(memberService.updateProfileImg(memberId, imageFile));
     }
 
     @GetMapping("/{memberId}")
-    public ResponseEntity<ProfileResponseDto> displayProfile(@PathVariable String memberId) {
-        ProfileResponseDto profileResponseDto = memberService.displayProfile(memberId);
+    public ResponseEntity<MemberResponse.DisplayProfile> displayProfile(@PathVariable String memberId) {
 
-        return ResponseEntity.ok(profileResponseDto);
+        return ResponseEntity.ok(memberService.displayProfile(memberId));
+    }
+
+    @GetMapping("/{memberId}/req")
+    public ResponseEntity<MemberResponse.DisplayMainList> displayMain(@PathVariable String memberId,
+                                                                      @RequestParam(name = "post-scroll-size") int postScrollSize,
+                                                                      @RequestParam(name = "last-postidx", required = false) Long lastPostIdx,
+                                                                      @RequestParam(name = "story-scroll-size") int storyScrollSize,
+                                                                      @RequestParam(name = "last-storyidx", required = false) Long lastStoryIdx) {
+
+        MemberRequest.DisplayMain request = MemberRequest.DisplayMain.builder()
+                .memberId(memberId)
+                .postScrollSize(postScrollSize)
+                .lastPostIdx(lastPostIdx)
+                .storyScrollSize(storyScrollSize)
+                .lastStoryIdx(lastStoryIdx)
+                .build();
+
+        return ResponseEntity.ok(memberService.displayMain(request));
+    }
+
+    @PatchMapping("/{memberId}/update/delete-status")
+    public ResponseEntity<MemberResponse.UpdateDeleteStatus> updateDeleteStatus(@PathVariable String memberId,
+                                                                                @RequestBody MemberRequest.UpdateDeleteStatus request) {
+
+        return ResponseEntity.ok(memberService.updateDeleteStatus(request.appendDto(memberId)));
     }
 }

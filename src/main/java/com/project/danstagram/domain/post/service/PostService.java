@@ -96,7 +96,7 @@ public class PostService {
 
         PageRequest pageRequest = PageRequestUtil.setPageRequest(request.scrollSize());
         List<PostResponse.PostInfoForProfile> postInfos =
-                postRepositoryCustom.findPostWithPostLike(request.memberId(), request.lastPostIdx(), pageRequest);
+                postRepositoryCustom.findPostForProfile(request.memberId(), request.lastPostIdx(), pageRequest);
 
         Long nextCursor = -1L;
         ScrollPaginationCollection<PostResponse.PostInfoForProfile> cursor =

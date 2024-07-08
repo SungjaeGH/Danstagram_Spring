@@ -90,6 +90,7 @@ public class PostImageService {
     }
 
     private List<PostImageResponse.PostImageInfo> setValidImgList(List<PostImage> imgList, Map<String, String> storedImgsMap) {
+
         List<PostImageResponse.PostImageInfo> matchesList = new ArrayList<>();
         long imgIdx = 0L;
 

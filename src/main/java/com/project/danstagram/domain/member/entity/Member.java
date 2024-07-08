@@ -7,14 +7,11 @@ import com.project.danstagram.domain.dm.entity.DmGroup;
 import com.project.danstagram.domain.dm.entity.DmGroupMember;
 import com.project.danstagram.domain.dm.entity.DmLike;
 import com.project.danstagram.domain.follow.entity.Follow;
-import com.project.danstagram.domain.member.dto.UpdateProfileDto;
+import com.project.danstagram.domain.member.dto.MemberRequest;
 import com.project.danstagram.domain.post.entity.Post;
 import com.project.danstagram.domain.search.entity.Search;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Mapping;
-import org.springframework.data.elasticsearch.annotations.Setting;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,6 +72,9 @@ public class Member {
     @Column(name = "member_logout_date")
     private String memberLogoutDate;
 
+    @Column(name = "member_delete_date")
+    private String memberDeleteDate;
+
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SocialMember> socialMembers = new ArrayList<>();
 
@@ -109,7 +109,7 @@ public class Member {
     private List<Search> searches = new ArrayList<>();
 
     @Builder
-    public Member(Long memberIdx, String memberId, String memberPhone, String memberEmail, String memberPw, Role memberRole, String memberName, String memberIntroduce, String memberWebsite, String memberGender, String memberStoreImage, String memberUploadImage, String memberStatus, String memberLoginDate, String memberLogoutDate, List<SocialMember> socialMembers, List<Post> posts, List<Comment> comments, List<CommentLike> commentLikes, List<Follow> followToUsers, List<Follow> followFromUsers, List<DmGroup> dmGroups, List<DmGroupMember> dmGroupMembers, List<Dm> dms, List<DmLike> dmLikes, List<Search> searches) {
+    public Member(Long memberIdx, String memberId, String memberPhone, String memberEmail, String memberPw, Role memberRole, String memberName, String memberIntroduce, String memberWebsite, String memberGender, String memberStoreImage, String memberUploadImage, String memberStatus, String memberLoginDate, String memberLogoutDate, String memberDeleteDate, List<SocialMember> socialMembers, List<Post> posts, List<Comment> comments, List<CommentLike> commentLikes, List<Follow> followToUsers, List<Follow> followFromUsers, List<DmGroup> dmGroups, List<DmGroupMember> dmGroupMembers, List<Dm> dms, List<DmLike> dmLikes, List<Search> searches) {
         this.memberIdx = memberIdx;
         this.memberId = memberId;
         this.memberPhone = memberPhone;
@@ -125,6 +125,7 @@ public class Member {
         this.memberStatus = memberStatus;
         this.memberLoginDate = memberLoginDate;
         this.memberLogoutDate = memberLogoutDate;
+        this.memberDeleteDate = memberDeleteDate;
         this.socialMembers = socialMembers;
         this.posts = posts;
         this.comments = comments;
@@ -192,12 +193,12 @@ public class Member {
         this.memberPw = newEncodedPw;
     }
 
-    public void updateProfile(UpdateProfileDto updateProfileDto) {
-        Optional.ofNullable(updateProfileDto.getMemberWebsite())
+    public void updateProfile(MemberRequest.UpdateProfile request) {
+        Optional.ofNullable(request.getMemberWebsite())
                 .ifPresent(website -> this.memberWebsite = website);
-        Optional.ofNullable(updateProfileDto.getMemberIntroduce())
+        Optional.ofNullable(request.getMemberIntroduce())
                 .ifPresent(introduce -> this.memberIntroduce = introduce);
-        Optional.ofNullable(updateProfileDto.getMemberGender())
+        Optional.ofNullable(request.getMemberGender())
                 .ifPresent(gender -> this.memberGender = gender);
     }
 
@@ -220,5 +221,9 @@ public class Member {
     public void changeLogoutState(String currTime) {
         this.memberLogoutDate = currTime;
         this.memberStatus = "Logout";
+    }
+
+    public void updateMemberDeleteDate(String deleteDate) {
+        this.memberDeleteDate = deleteDate;
     }
 }

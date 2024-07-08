@@ -7,10 +7,17 @@ import com.project.danstagram.domain.member.entity.SocialMember;
 import com.project.danstagram.domain.member.repository.MemberRepository;
 import com.project.danstagram.domain.member.repository.SocialMemberRepository;
 import com.project.danstagram.domain.post.repository.PostRepository;
+import com.project.danstagram.domain.post.repository.PostRepositoryCustom;
+import com.project.danstagram.domain.post.service.PostImageService;
 import com.project.danstagram.global.file.ConstUtil;
 import com.project.danstagram.global.file.FileUploadUtil;
+import com.project.danstagram.global.scroll.PageRequestUtil;
+import com.project.danstagram.global.scroll.ScrollPaginationCollection;
+import com.project.danstagram.global.time.TimeFormat;
+import com.project.danstagram.global.time.TimeUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -27,47 +35,51 @@ import java.util.regex.Pattern;
 @Transactional(readOnly = true)
 @Slf4j
 public class MemberService {
+
+    private final PostImageService postImageService;
     private final MemberRepository memberRepository;
     private final SocialMemberRepository socialMemberRepository;
     private final FollowRepository followRepository;
     private final PostRepository postRepository;
+    private final PostRepositoryCustom postRepositoryCustom;
     private final PasswordEncoder passwordEncoder;
     private final FileUploadUtil fileUploadUtil;
+    private final TimeUtil timeUtil;
 
-    public MemberResponseDto signUp(SignUpDto signUpDto) {
-        if (memberRepository.existsByMemberId(signUpDto.getMemberId())) {
+    public MemberResponse.SignUp signUp(MemberRequest.SignUp request) {
+        if (memberRepository.existsByMemberId(request.getMemberId())) {
             throw new IllegalArgumentException("이미 사용중인 사용자 이름입니다.");
         }
 
         // 정규식 체크
-        int checkCode = checkMemberInfoValidation(signUpDto.getMemberInfo());
+        int checkCode = checkMemberInfoValidation(request.getMemberInfo());
         switch (checkCode) {
             case 1:
-                signUpDto.setMemberEmail(signUpDto.getMemberInfo());
+                request.setMemberEmail(request.getMemberInfo());
                 break;
 
             case 2:
-                signUpDto.setMemberPhone(signUpDto.getMemberInfo());
+                request.setMemberPhone(request.getMemberInfo());
                 break;
 
             default:
                 throw new IllegalArgumentException("올바른 이메일 또는 휴대전화 형식이 아닙니다.");
         }
 
-        String encodePw = passwordEncoder.encode(signUpDto.getMemberPw());
+        String encodePw = passwordEncoder.encode(request.getMemberPw());
 
-        Member savedMember = signUpDto.toEntity(encodePw);
+        Member savedMember = request.toEntity(encodePw);
 
         // 소셜 회원일 경우, 1:N 연결
-        if (signUpDto.getSocialMemberEmail() != null) {
+        if (request.getSocialMemberEmail() != null) {
             SocialMember socialMember = socialMemberRepository
-                    .findBySocialEmail(signUpDto.getSocialMemberEmail())
+                    .findBySocialEmail(request.getSocialMemberEmail())
                     .orElseThrow(() -> new UsernameNotFoundException("해당하는 소셜 회원을 찾을 수 없습니다."));
 
             savedMember.putSocialMember(socialMember);
         }
 
-        return MemberResponseDto.toResponseDto(memberRepository.save(savedMember));
+        return MemberResponse.SignUp.toResponse(memberRepository.save(savedMember));
     }
 
     private static int checkMemberInfoValidation(String memberInfo) {
@@ -85,38 +97,48 @@ public class MemberService {
         return resultCode;
     }
 
-    public MemberResponseDto findMember(String memberInfo) {
-        Member member = memberRepository.findByMemberIdOrMemberPhoneOrMemberEmail(memberInfo, memberInfo, memberInfo)
-                .orElseThrow(() -> new UsernameNotFoundException("해당하는 회원을 찾을 수 없습니다."));
+    public MemberResponse.ResetPw resetMemberPw(MemberRequest.ResetPw request) {
 
-        return MemberResponseDto.toResponseDto(member);
-    }
+        boolean isPwReset = true;
 
-    public MemberResponseDto resetMemberPw(String memberId, ResetPwDto resetPwDto) {
-        if (!resetPwDto.getNewMemberPw().equals(resetPwDto.getConfirmMemberPw())) {
+        if (!request.getNewMemberPw().equals(request.getConfirmMemberPw())) {
             throw new IllegalArgumentException("입력한 비밀번호가 일치하지 않습니다.");
         }
 
-        Member changedMember = memberRepository.findByMemberId(memberId)
+        Member changedMember = memberRepository.findByMemberId(request.getMemberId())
                 .orElseThrow(() -> new UsernameNotFoundException("해당하는 회원을 찾을 수 없습니다."));
 
-        String encodedNewPw = passwordEncoder.encode(resetPwDto.getNewMemberPw());
+        String encodedNewPw = passwordEncoder.encode(request.getNewMemberPw());
         changedMember.changePw(encodedNewPw);
 
-        return MemberResponseDto.toResponseDto(memberRepository.save(changedMember));
+        Member saved = memberRepository.save(changedMember);
+
+        return MemberResponse.ResetPw.builder()
+                .memberId(saved.getMemberId())
+                .isPwReset(isPwReset)
+                .build();
     }
 
-    public ProfileResponseDto updateProfile(String memberId, UpdateProfileDto updateProfileDto) {
+    public MemberResponse.UpdateProfile updateProfile(MemberRequest.UpdateProfile request) {
 
-        Member updatedMember = memberRepository.findByMemberId(memberId)
+        boolean isProfileUpdate = true;
+
+        Member updatedMember = memberRepository.findByMemberId(request.getMemberId())
                 .orElseThrow(() -> new UsernameNotFoundException("해당하는 회원을 찾을 수 없습니다."));
 
-        updatedMember.updateProfile(updateProfileDto);
+        updatedMember.updateProfile(request);
 
-        return ProfileResponseDto.toResponseDto(memberRepository.save(updatedMember));
+        Member saved = memberRepository.save(updatedMember);
+
+        return MemberResponse.UpdateProfile.builder()
+                .memberId(saved.getMemberId())
+                .isProfileUpdate(isProfileUpdate)
+                .build();
     }
 
-    public ProfileResponseDto updateProfileImg(String memberId, MultipartFile imgFile) throws IOException {
+    public MemberResponse.UpdateProfileImg updateProfileImg(String memberId, MultipartFile imgFile) throws IOException {
+
+        boolean isProfileImgUpdate = true;
 
         Member updatedMember = memberRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new UsernameNotFoundException("해당하는 회원을 찾을 수 없습니다."));
@@ -130,15 +152,20 @@ public class MemberService {
         Map<String, Object> profileImg = fileUploadUtil.singleFileUpload(updatedMember.getMemberIdx(), fileFlag, imgFile);
         updatedMember.updateProfileImg(profileImg);
 
-        return ProfileResponseDto.toResponseDto(memberRepository.save(updatedMember));
+        Member saved = memberRepository.save(updatedMember);
+
+        return MemberResponse.UpdateProfileImg.builder()
+                .memberId(saved.getMemberId())
+                .isProfileImgUpdate(isProfileImgUpdate)
+                .build();
     }
 
-    public ProfileResponseDto displayProfile(String memberId) {
+    public MemberResponse.DisplayProfile displayProfile(String memberId) {
 
         Member member = memberRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new UsernameNotFoundException("해당하는 회원을 찾을 수 없습니다."));
 
-        return ProfileResponseDto.builder()
+        return MemberResponse.DisplayProfile.builder()
                     .memberId(memberId)
                     .memberImg(getProfileImg(member.getMemberStoreImage()))
                     .memberName(member.getMemberName())
@@ -159,5 +186,79 @@ public class MemberService {
         File imageFile = new File(uploadPath, imgName);
 
         return fileUploadUtil.getFileEncoding(imageFile);
+    }
+
+    public MemberResponse.DisplayMainList displayMain(MemberRequest.DisplayMain request) {
+
+        // TODO: 2024-07-08 story 정보 필요
+
+        return MemberResponse.DisplayMainList.builder()
+                .memberInfo(findMemberForMain(request))
+                .postInfo(findPostsForMain(request))
+                .build();
+    }
+
+    private MemberResponse.DisplayMemberMain findMemberForMain(MemberRequest.DisplayMain request) {
+
+        Member member = memberRepository.findByMemberId(request.memberId())
+                .orElseThrow(() -> new UsernameNotFoundException("해당하는 회원을 찾을 수 없습니다."));
+
+        return MemberResponse.DisplayMemberMain.builder()
+                .memberId(member.getMemberId())
+                .memberName(member.getMemberName())
+                .memberProfile(getProfileImg(member.getMemberStoreImage()))
+                .build();
+    }
+
+    private MemberResponse.DisplayPostMainList findPostsForMain(MemberRequest.DisplayMain request) {
+
+        PageRequest pageRequest = PageRequestUtil.setPageRequest(request.postScrollSize());
+
+        List<MemberResponse.DisplayPostMain> postInfos =
+                postRepositoryCustom.findPostsForMain(request.memberId(), request.lastPostIdx(), pageRequest);
+
+        Long nextCursor = -1L;
+        ScrollPaginationCollection<MemberResponse.DisplayPostMain> cursor =
+                ScrollPaginationCollection.of(postInfos, request.postScrollSize());
+        if (!cursor.isLastScroll()) {
+            nextCursor = cursor.getNextCursor().getPostIdx();
+        }
+
+        List<MemberResponse.DisplayPostMain> currentScrollItems = cursor.getCurrentScrollItems();
+
+        return MemberResponse.DisplayPostMainList.builder()
+                .totalElements(postRepositoryCustom.countTotalPosts(request.memberId()))
+                .nextCursor(nextCursor)
+                .contents(appendPostImagesInfo(currentScrollItems))
+                .build();
+    }
+
+    private List<MemberResponse.DisplayPostMain> appendPostImagesInfo(List<MemberResponse.DisplayPostMain> currentScrollItems) {
+
+        currentScrollItems.forEach(postInfo ->
+                postInfo.setPostImageList(postImageService.getImagesList(postInfo.getPostIdx()))
+        );
+
+        return currentScrollItems;
+    }
+
+    public MemberResponse.UpdateDeleteStatus updateDeleteStatus(MemberRequest.UpdateDeleteStatus request) {
+
+        Member member = memberRepository.findByMemberId(request.getMemberId())
+                .orElseThrow(() -> new UsernameNotFoundException("해당하는 회원을 찾을 수 없습니다."));
+
+        String deleteDate = null;
+        if (request.isMemberDelete()) {
+            deleteDate = timeUtil.getCurrTime(TimeFormat.TimeFormat1);
+        }
+
+        member.updateMemberDeleteDate(deleteDate);
+        Member saved = memberRepository.save(member);
+
+        return MemberResponse.UpdateDeleteStatus.builder()
+                .memberId(saved.getMemberId())
+                .isMemberDelete(request.isMemberDelete())
+                .memberDeleteDate(saved.getMemberDeleteDate())
+                .build();
     }
 }
