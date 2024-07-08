@@ -71,13 +71,13 @@ public class DmService {
         Long nextCursor = -1L;
         ScrollPaginationCollection<DmResponse.DmMsgInfo> cursor = ScrollPaginationCollection.of(dmMsgInfo, scrollInfo.getScrollSize());
         if (!cursor.isLastScroll()) {
-            nextCursor = cursor.getNextCursor().getDmIdx();
+            nextCursor = cursor.getNextCursor().dmIdx();
         }
 
         List<DmResponse.DmMsgInfo> currentScrollItems = cursor.getCurrentScrollItems();
 
         return DmResponse.DmMsgList.builder()
-                .totalElements(scrollInfo.getScrollSize())
+                .totalElements(dmRepositoryCustom.countTotalDms(dmGroupIdx))
                 .nextCursor(nextCursor)
                 .dmMsgs(currentScrollItems)
                 .build();

@@ -1,6 +1,7 @@
 package com.project.danstagram.domain.post.controller;
 
-import com.project.danstagram.domain.post.dto.UpdatePostLikeDto;
+import com.project.danstagram.domain.post.dto.PostLikeRequest;
+import com.project.danstagram.domain.post.dto.PostLikeResponse;
 import com.project.danstagram.domain.post.service.PostLikeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,13 +19,12 @@ public class PostLikeController {
     private final PostLikeService postLikeService;
 
     @PatchMapping("/update/{writerId}")
-    public ResponseEntity<?> updatePostLike(@PathVariable Map<String, String> pathVarsMap,
-                                            @RequestBody UpdatePostLikeDto updatePostLikeDto) {
+    public ResponseEntity<PostLikeResponse.UpdatePostLike> updatePostLike(@PathVariable Map<String, String> pathVarsMap,
+                                                                          @RequestBody PostLikeRequest.UpdatePostLike updatePostLikeDto) {
 
-        if (!postLikeService.updatePostLike(pathVarsMap, updatePostLikeDto)) {
-            return ResponseEntity.internalServerError().build();
-        }
+        PostLikeRequest.UpdatePostLike updatePostLike =
+                updatePostLikeDto.appendDto(Long.parseLong(pathVarsMap.get("postIdx")), pathVarsMap.get("writerId"));
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(postLikeService.updatePostLike(updatePostLike));
     }
 }

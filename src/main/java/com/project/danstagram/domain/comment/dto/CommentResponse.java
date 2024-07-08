@@ -25,8 +25,12 @@ public class CommentResponse {
     }
 
     @Builder
-    public record CommentList(int totalElements, Long nextCursor, List<CommentInfo> commentInfos){
+    public record UpdateCommentLike(Long postIdx, Long commentIdx, String memberId,
+                                    Long commentLikeIdx, boolean isCommentLike) {
+    }
 
+    @Builder
+    public record CommentList(Long totalElements, Long nextCursor, List<CommentInfo> commentInfos){
     }
 
     @Getter

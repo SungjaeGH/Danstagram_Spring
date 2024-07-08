@@ -39,9 +39,9 @@ public class CommentService {
     private final TimeUtil timeUtil;
 
     @Transactional
-    public CommentResponse.CreateComment createComment(Long postIdx, String writerId, CommentRequest.CreateComment createCommentDto) {
+    public CommentResponse.CreateComment createComment(Long postIdx, String writerId, CommentRequest.CreateComment request) {
 
-        Comment savedComment = createCommentDto.toEntity(timeUtil.getCurrTime(TimeFormat.TimeFormat1));
+        Comment savedComment = request.toEntity(timeUtil.getCurrTime(TimeFormat.TimeFormat1));
 
         // 게시글 존재 유무 확인
         Post post = postRepository.findById(postIdx)
@@ -52,8 +52,8 @@ public class CommentService {
                 .orElseThrow(() -> new UsernameNotFoundException("해당 회원을 찾을 수 없습니다. Id: " + writerId));
 
         // 부모 댓글이 존재하면 추가
-        if (createCommentDto.commentContent() != null) {
-            Long parentIdx = createCommentDto.commentParentIdx();
+        if (request.commentParentIdx() != null) {
+            Long parentIdx = request.commentParentIdx();
 
             Comment parentComment = commentRepository.findById(parentIdx)
                     .orElseThrow(() -> new CommentNotFoundException("부모 댓글을 찾을 수 없습니다. Parent Idx: " + parentIdx));
@@ -122,7 +122,7 @@ public class CommentService {
         List<CommentResponse.CommentInfo> currentScrollItems = cursor.getCurrentScrollItems();
 
         return CommentResponse.CommentList.builder()
-                .totalElements(request.scrollSize())
+                .totalElements(commentRepositoryCustom.countTotalComments(request.postIdx()))
                 .nextCursor(nextCursor)
                 .commentInfos(appendChildComments(currentScrollItems))
                 .build();

@@ -71,7 +71,7 @@ public class SearchService {
         List<SearchResponse.RecentSearches> currentScrollItems = cursor.getCurrentScrollItems();
 
         return SearchResponse.RecentSearchList.builder()
-                .totalElements(request.scrollSize())
+                .totalElements(searchRepositoryCustom.countTotalRecentSearches(request.memberId()))
                 .nextCursor(nextCursor)
                 .recentSearches(currentScrollItems)
                 .build();

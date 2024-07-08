@@ -1,9 +1,6 @@
 package com.project.danstagram.domain.post.controller;
 
-import com.project.danstagram.domain.post.dto.CreatePostDto;
-import com.project.danstagram.domain.post.dto.PostListResponseDto;
-import com.project.danstagram.domain.post.dto.PostResponseDto;
-import com.project.danstagram.domain.post.dto.UpdatePostDto;
+import com.project.danstagram.domain.post.dto.*;
 import com.project.danstagram.domain.post.service.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,12 +20,12 @@ public class PostController {
     private final PostService postService;
 
     @PostMapping("/create")
-    public ResponseEntity<PostResponseDto> createPost(@RequestPart("body") CreatePostDto createPostDto,
-                                                      @RequestPart("images") List<MultipartFile> imageFiles) throws IOException {
+    public ResponseEntity<PostResponse.CreatePost> createPost(@RequestPart("body") PostRequest.CreatePost createPostDto,
+                                                              @RequestPart("images") List<MultipartFile> imageFiles) throws IOException {
 
         // post 저장 & postImage 저장
-        PostResponseDto createResult = postService.createPost(createPostDto, imageFiles);
-        if (createResult.getPostIdx() == 0) {
+        PostResponse.CreatePost createResult = postService.createPost(createPostDto, imageFiles);
+        if (createResult.postIdx() == 0) {
             ResponseEntity.internalServerError().build();
         }
 
@@ -36,24 +33,33 @@ public class PostController {
     }
 
     @GetMapping("/{postIdx}/find")
-    public ResponseEntity<PostResponseDto> findPost(@PathVariable Long postIdx) {
+    public ResponseEntity<PostResponse.FindPost> findPost(@PathVariable Long postIdx) {
         return ResponseEntity.ok(postService.findPost(postIdx));
     }
 
     @PatchMapping("/{postIdx}/update")
-    public ResponseEntity<PostResponseDto> updatePost(@PathVariable Long postIdx,
-                                                      @RequestBody UpdatePostDto updatePostDto) {
+    public ResponseEntity<PostResponse.UpdatePost> updatePost(@PathVariable Long postIdx,
+                                                              @RequestBody PostRequest.UpdatePost updatePostDto) {
 
         return ResponseEntity.ok(postService.updatePost(postIdx, updatePostDto));
     }
 
     @GetMapping("/profile/{memberId}")
-    public ResponseEntity<PostListResponseDto> findPostForProfile(@PathVariable String memberId,
-                                                @RequestParam(name = "scroll-size") int scrollSize,
-                                                @RequestParam(name = "last-postidx", required = false) Long lastPostIdx) {
+    public ResponseEntity<PostResponse.PostListForProfile> findPostForProfile(@PathVariable String memberId,
+                                                                              @RequestParam(name = "scroll-size") int scrollSize,
+                                                                              @RequestParam(name = "last-postidx", required = false) Long lastPostIdx) {
 
-        PostListResponseDto postForProfile = postService.findPostForProfile(memberId, scrollSize, lastPostIdx);
+        PostRequest.FindPostForProfile request = new PostRequest.FindPostForProfile(memberId, scrollSize, lastPostIdx);
 
-        return ResponseEntity.ok(postForProfile);
+        return ResponseEntity.ok(postService.findPostForProfile(request));
+    }
+
+    @PatchMapping("/{postIdx}/update/delete-status")
+    public ResponseEntity<PostResponse.UpdatePostDeleteStatus> updatePostDeleteStatus(@PathVariable Long postIdx,
+                                                                                     @RequestBody PostRequest.UpdatePostDeleteStatus updatePostDeleteStatus) {
+
+        updatePostDeleteStatus.setPostIdx(postIdx);
+
+        return ResponseEntity.ok(postService.updatePostDeleteStatus(updatePostDeleteStatus));
     }
 }

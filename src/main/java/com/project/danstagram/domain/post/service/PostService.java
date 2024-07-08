@@ -7,8 +7,8 @@ import com.project.danstagram.domain.post.dto.*;
 import com.project.danstagram.domain.post.entity.Post;
 import com.project.danstagram.domain.post.entity.PostImage;
 import com.project.danstagram.domain.post.exception.PostNotFoundException;
-import com.project.danstagram.domain.post.repository.PostLikeRepository;
 import com.project.danstagram.domain.post.repository.PostRepository;
+import com.project.danstagram.domain.post.repository.PostRepositoryCustom;
 import com.project.danstagram.global.scroll.PageRequestUtil;
 import com.project.danstagram.global.scroll.ScrollPaginationCollection;
 import com.project.danstagram.global.time.TimeFormat;
@@ -31,20 +31,20 @@ import java.util.stream.Collectors;
 public class PostService {
 
     private final PostRepository postRepository;
+    private final PostRepositoryCustom postRepositoryCustom;
     private final PostImageService postImageService;
-    private final PostLikeRepository postLikeRepository;
     private final MemberRepository memberRepository;
     private final CommentRepository commentRepository;
     private final TimeUtil timeUtil;
 
     @Transactional
-    public PostResponseDto createPost(CreatePostDto postDto, List<MultipartFile> imageFiles) throws IOException {
+    public PostResponse.CreatePost createPost(PostRequest.CreatePost request, List<MultipartFile> imageFiles) throws IOException {
 
-        Post savedPost = postDto.toEntity(timeUtil.getCurrTime(TimeFormat.TimeFormat1));
+        Post savedPost = request.toEntity(timeUtil.getCurrTime(TimeFormat.TimeFormat1));
 
         // 회원 존재 유무 확인 및 Member 엔티티의 post list에 저장
-        Member member = memberRepository.findByMemberId(postDto.getWriterId())
-                .orElseThrow(() -> new UsernameNotFoundException("해당하는 회원을 찾을 수 없습니다. id : " + postDto.getWriterId()));
+        Member member = memberRepository.findByMemberId(request.writerId())
+                .orElseThrow(() -> new UsernameNotFoundException("해당하는 회원을 찾을 수 없습니다. id : " + request.writerId()));
         member.putPost(savedPost);
 
         Post saved = postRepository.save(savedPost);
@@ -56,61 +56,94 @@ public class PostService {
         postImages.forEach(saved::putPostImage);
         postRepository.save(saved);
 
-        return PostResponseDto.createPostBuilder()
+        return PostResponse.CreatePost.builder()
                 .postIdx(saved.getPostIdx())
-                .createPostBuild();
+                .build();
     }
 
     @Transactional
-    public PostResponseDto findPost(Long postIdx) {
+    public PostResponse.FindPost findPost(Long postIdx) {
 
         Post findPost = postRepository.findById(postIdx)
                 .orElseThrow(() -> new PostNotFoundException("해당 게시글을 찾을 수 없습니다. Idx: " + postIdx));
 
-        return PostResponseDto.findPostBuilder()
+        return PostResponse.FindPost.builder()
                 .postContent(findPost.getPostContent())
                 .postDate(findPost.getPostDate())
                 .postUpdateDate(findPost.getPostUpdateDate())
                 .postDeleteDate(findPost.getPostDeleteDate())
                 .postImageList(postImageService.getImagesList(postIdx))
-                .findPostBuild();
+                .build();
     }
 
     @Transactional
-    public PostResponseDto updatePost(Long postIdx, UpdatePostDto updatePostDto) {
+    public PostResponse.UpdatePost updatePost(Long postIdx, PostRequest.UpdatePost request) {
 
         Post updatedPost = postRepository.findById(postIdx)
                 .orElseThrow(() -> new PostNotFoundException("해당 게시글을 찾을 수 없습니다. Idx: " + postIdx));
 
-        postRepository.save(updatePostDto.toEntity(timeUtil.getCurrTime(TimeFormat.TimeFormat1), updatedPost));
+        Post saved = postRepository.save(request.toEntity(timeUtil.getCurrTime(TimeFormat.TimeFormat1), updatedPost));
 
-        return PostResponseDto.createPostBuilder()
-                .postIdx(updatedPost.getPostIdx())
-                .createPostBuild();
+        return PostResponse.UpdatePost.builder()
+                .postIdx(saved.getPostIdx())
+                .isPostUpdate(true)
+                .postUpdateDate(saved.getPostUpdateDate())
+                .build();
     }
 
     @Transactional
-    public PostListResponseDto findPostForProfile(String memberId, int scrollSize, Long lastPostIdx) {
+    public PostResponse.PostListForProfile findPostForProfile(PostRequest.FindPostForProfile request) {
 
-        PageRequest pageRequest = PageRequestUtil.setPageRequest(scrollSize);
-        List<Post> postList = postRepository.findPostList(memberId, lastPostIdx, pageRequest);
+        PageRequest pageRequest = PageRequestUtil.setPageRequest(request.scrollSize());
+        List<PostResponse.PostInfoForProfile> postInfos =
+                postRepositoryCustom.findPostWithPostLike(request.memberId(), request.lastPostIdx(), pageRequest);
 
-        ScrollPaginationCollection<PostInfoResponseDto> postsCursor = ScrollPaginationCollection.of(setPostsInfo(postList), scrollSize);
+        Long nextCursor = -1L;
+        ScrollPaginationCollection<PostResponse.PostInfoForProfile> cursor =
+                ScrollPaginationCollection.of(postInfos, request.scrollSize());
+        if (!cursor.isLastScroll()) {
 
-        return PostListResponseDto.of(postsCursor, postRepository.countPostsByWriterId(memberId));
+            nextCursor = cursor.getNextCursor().getPostIdx();
+        }
+
+        List<PostResponse.PostInfoForProfile> currentScrollItems = cursor.getCurrentScrollItems();
+
+        return PostResponse.PostListForProfile.builder()
+                    .totalElements(postRepositoryCustom.countTotalPosts(request.memberId()))
+                    .nextCursor(nextCursor)
+                    .contents(appendPostsInfo(currentScrollItems))
+                .build();
     }
 
-    private List<PostInfoResponseDto> setPostsInfo(List<Post> postList) {
+    private List<PostResponse.PostInfoForProfile> appendPostsInfo(List<PostResponse.PostInfoForProfile> postList) {
 
-        // TODO: 2024-06-20 코드 리펙토링 필요 -> 다음 스크롤 요소에 대한 불필요한 file 접근중.
-        return postList.stream()
-                .map(post ->
-                        PostInfoResponseDto.builder()
-                                .postIdx(post.getPostIdx())
-                                .postFirstEncodingImg(postImageService.getFirstEncodingImage(post.getPostIdx()))
-                                .postLikeCount(postLikeRepository.countPostLikes(post.getPostIdx()))
-                                .postCommentCount(commentRepository.countCommentsByPostIdx(post.getPostIdx()))
-                                .build()
-                ).collect(Collectors.toList());
+        return postList.stream().map(info ->
+                PostResponse.PostInfoForProfile.builder()
+                            .postIdx(info.getPostIdx())
+                            .postLikeCount(info.getPostLikeCount())
+                            .postImg(postImageService.getFirstEncodingImage(info.getPostIdx()))
+                            .postCommentCount(commentRepository.countCommentsByPostIdx(info.getPostIdx()))
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public PostResponse.UpdatePostDeleteStatus updatePostDeleteStatus(PostRequest.UpdatePostDeleteStatus request) {
+
+        Post post = postRepository.findById(request.getPostIdx())
+                .orElseThrow(() -> new PostNotFoundException("해당 게시글을 찾을 수 없습니다. Idx: " + request.getPostIdx()));
+
+        String deleteDate = null;
+        if (request.isPostDelete()) {
+            deleteDate = timeUtil.getCurrTime(TimeFormat.TimeFormat1);
+        }
+
+        Post saved = postRepository.save(request.toEntity(post, deleteDate));
+
+        return PostResponse.UpdatePostDeleteStatus.builder()
+                    .postIdx(saved.getPostIdx())
+                    .isPostDelete(request.isPostDelete())
+                    .postDeleteDate(saved.getPostDeleteDate())
+                .build();
     }
 }

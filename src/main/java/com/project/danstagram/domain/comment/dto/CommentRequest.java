@@ -21,14 +21,24 @@ public class CommentRequest {
     }
 
     @Getter
-    @RequiredArgsConstructor
+    @Builder
+    @AllArgsConstructor
     public static class UpdateCommentLike {
 
+        private Long postIdx;
+        private String writerId;
+        private Long commentIdx;
         private Long commentLikeIdx;
         private final boolean isCommentLike;
 
         public void setCommentLikeIdx(Long commentLikeIdx) {
             this.commentLikeIdx = commentLikeIdx;
+        }
+
+        public void appendDto(Long postIdx, String writerId, Long commentIdx) {
+            this.postIdx = postIdx;
+            this.writerId = writerId;
+            this.commentIdx = commentIdx;
         }
 
         public CommentLike toEntity(Comment comment, Member member) {
@@ -42,6 +52,5 @@ public class CommentRequest {
     }
 
     public record FindComments(Long postIdx, int scrollSize, Long lastCommentIdx) {
-
     }
 }

@@ -13,6 +13,7 @@ import java.util.List;
 import static com.project.danstagram.domain.comment.entity.QComment.comment;
 import static com.project.danstagram.domain.comment.entity.QCommentLike.commentLike;
 import static com.project.danstagram.domain.member.entity.QMember.member;
+import static com.project.danstagram.domain.post.entity.QPost.post;
 
 @Repository
 @RequiredArgsConstructor
@@ -76,5 +77,14 @@ public class CommentRepositoryCustom {
                 .groupBy(comment.commentIdx)
                 .orderBy(comment.commentDate.asc())
                 .fetch();
+    }
+
+    public Long countTotalComments(Long postIdx) {
+
+        return queryFactory
+                .select(comment.countDistinct())
+                .from(comment).innerJoin(post).on(comment.post.postIdx.eq(post.postIdx))
+                .where(post.postIdx.eq(postIdx))
+                .fetchOne();
     }
 }

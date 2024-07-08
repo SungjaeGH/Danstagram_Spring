@@ -123,7 +123,7 @@ public class DmGroupService {
         List<DmResponse.DmGroupInfo> currentScrollItems = dmGroupCursor.getCurrentScrollItems();
 
         return DmResponse.DmGroupList.builder()
-                .totalElements(scrollSize)
+                .totalElements(dmRepositoryCustom.countTotalDmGroups(memberId))
                 .nextCursor(nextCursor)
                 .dmGroupList(AppendInfoInDmGroupInfos(currentScrollItems))
                 .build();

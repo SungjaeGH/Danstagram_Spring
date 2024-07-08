@@ -16,8 +16,7 @@ public class SearchResponse {
 
     /* findRecentSearches */
     @Builder
-    public record RecentSearchList(int totalElements, Long nextCursor, List<RecentSearches> recentSearches) {
-
+    public record RecentSearchList(Long totalElements, Long nextCursor, List<RecentSearches> recentSearches) {
     }
 
     public record RecentSearches(Long searchIdx, String searchDate, String searchType, String searchKeyword) {

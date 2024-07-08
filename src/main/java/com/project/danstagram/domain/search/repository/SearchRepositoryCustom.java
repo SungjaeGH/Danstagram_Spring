@@ -50,4 +50,14 @@ public class SearchRepositoryCustom {
 
         return search.searchIdx.lt(lastSearchIdx);
     }
+
+    public Long countTotalRecentSearches(String memberId) {
+
+        return queryFactory
+                .select(search.countDistinct())
+                .from(search)
+                    .innerJoin(member).on(search.member.memberIdx.eq(member.memberIdx))
+                .where(member.memberId.eq(memberId))
+                .fetchOne();
+    }
 }

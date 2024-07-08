@@ -1,7 +1,9 @@
 package com.project.danstagram.domain.comment.service;
 
 import com.project.danstagram.domain.comment.dto.CommentRequest;
+import com.project.danstagram.domain.comment.dto.CommentResponse;
 import com.project.danstagram.domain.comment.entity.Comment;
+import com.project.danstagram.domain.comment.entity.CommentLike;
 import com.project.danstagram.domain.comment.exception.CommentNotFoundException;
 import com.project.danstagram.domain.comment.repository.CommentLikeRepository;
 import com.project.danstagram.domain.comment.repository.CommentRepository;
@@ -28,31 +30,34 @@ public class CommentLikeService {
     private final MemberRepository memberRepository;
 
     @Transactional
-    public boolean updateCommentLike(Map<String, String> pathVarsMap, CommentRequest.UpdateCommentLike updateCommentLikeDto) {
+    public CommentResponse.UpdateCommentLike updateCommentLike(CommentRequest.UpdateCommentLike request) {
 
         // 게시글 존재 유무 확인
-        Long postIdx = Long.parseLong(pathVarsMap.get("postIdx"));
-        if (!postRepository.existsById(postIdx)) {
-            throw new PostNotFoundException("해당 게시글을 찾을 수 없습니다. Idx: " + postIdx);
+        if (!postRepository.existsById(request.getPostIdx())) {
+            throw new PostNotFoundException("해당 게시글을 찾을 수 없습니다. Idx: " + request.getPostIdx());
         }
 
         // 회원 존재 유무 확인
-        String writerId = pathVarsMap.get("writerId");
-        Member member = memberRepository.findByMemberId(writerId)
-                .orElseThrow(() -> new UsernameNotFoundException("좋아요를 누른 회원을 찾을 수 없습니다. Idx: " + writerId));
+        Member member = memberRepository.findByMemberId(request.getWriterId())
+                .orElseThrow(() -> new UsernameNotFoundException("좋아요를 누른 회원을 찾을 수 없습니다. Idx: " + request.getWriterId()));
 
         // 댓글 존재 유무 확인
-        Long commentIdx = Long.parseLong(pathVarsMap.get("commentIdx"));
-        Comment comment = commentRepository.findById(commentIdx)
-                .orElseThrow(() -> new CommentNotFoundException("해당 댓글을 찾을 수 없습니다. Idx: " + commentIdx));
+        Comment comment = commentRepository.findById(request.getCommentIdx())
+                .orElseThrow(() -> new CommentNotFoundException("해당 댓글을 찾을 수 없습니다. Idx: " + request.getCommentIdx()));
 
         // 댓글 좋아요를 한번이라도 누른 이력이 있으면, commentLike 세팅
-        commentLikeRepository.findByCommentIdxAndCommentLikeMemberIdx(commentIdx, member.getMemberIdx())
-                .ifPresent(commentLike -> updateCommentLikeDto.setCommentLikeIdx(commentLike.getCommentLikeIdx()));
+        commentLikeRepository.findByCommentIdxAndCommentLikeMemberIdx(request.getCommentIdx(), member.getMemberIdx())
+                .ifPresent(commentLike -> request.setCommentLikeIdx(commentLike.getCommentLikeIdx()));
 
         // 댓글 좋아요 존재 유무에 따른 update or insert
-        commentLikeRepository.save(updateCommentLikeDto.toEntity(comment, member));
+        CommentLike saved = commentLikeRepository.save(request.toEntity(comment, member));
 
-        return true;
+        return CommentResponse.UpdateCommentLike.builder()
+                    .postIdx(request.getPostIdx())
+                    .commentIdx(request.getCommentIdx())
+                    .commentLikeIdx(saved.getCommentLikeIdx())
+                    .memberId(saved.getMember().getMemberId())
+                    .isCommentLike(saved.isCommentLikeStatus())
+                .build();
     }
 }

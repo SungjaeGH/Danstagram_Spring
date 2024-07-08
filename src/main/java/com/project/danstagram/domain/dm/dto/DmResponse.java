@@ -12,12 +12,10 @@ public class DmResponse {
 
     @Builder
     public record CreateDmGroup(Long dmGroupIdx) {
-
     }
 
     @Builder
-    public record DmGroupList(int totalElements, Long nextCursor, List<DmGroupInfo> dmGroupList) {
-
+    public record DmGroupList(Long totalElements, Long nextCursor, List<DmGroupInfo> dmGroupList) {
     }
 
     @Getter
@@ -83,30 +81,17 @@ public class DmResponse {
 
     @Builder
     public record SendMessage(Long dmIdx, String writerId, String dmMessage) {
-
     }
 
     @Builder
-    public record DmMsgList(int totalElements, Long nextCursor, List<DmMsgInfo> dmMsgs) {
-
+    public record DmMsgList(Long totalElements, Long nextCursor, List<DmMsgInfo> dmMsgs) {
     }
 
-    @Getter
-    public static class DmMsgInfo {
-
-        private final Long dmIdx;
-        private final String writerId;
-        private final String dmMessage;
-        private final String dmDate;
-        private final List<String> dmLikes;
+    public record DmMsgInfo(Long dmIdx, String writerId, String dmMessage, String dmDate, List<String> dmLikes) {
 
         @QueryProjection
-        public DmMsgInfo(Long dmIdx, String writerId, String dmMessage, String dmDate, List<String> dmLikes) {
-            this.dmIdx = dmIdx;
-            this.writerId = writerId;
-            this.dmMessage = dmMessage;
-            this.dmDate = dmDate;
-            this.dmLikes = dmLikes;
+        public DmMsgInfo {
+
         }
     }
 
@@ -124,5 +109,4 @@ public class DmResponse {
     @Builder
     public record UpdateDmLike(Long dmGroupIdx, Long dmIdx, String dmMessage, boolean isDmLike) {
     }
-
 }

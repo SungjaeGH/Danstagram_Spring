@@ -140,5 +140,25 @@ public class DmRepositoryCustom {
 
         return dm.dmIdx.lt(lastDmIdx);
     }
+
+    public Long countTotalDms(Long dmGroupIdx) {
+
+        return queryFactory
+                .select(dm.countDistinct())
+                .from(dm)
+                    .innerJoin(dmGroup).on(dm.dmGroup.dmGroupIdx.eq(dmGroup.dmGroupIdx))
+                .where(dmGroup.dmGroupIdx.eq(dmGroupIdx))
+                .fetchOne();
+    }
+
+    public Long countTotalDmGroups(String memberId) {
+
+        return queryFactory
+                .select(dmGroupMember.countDistinct())
+                .from(dmGroupMember)
+                    .innerJoin(member).on(dmGroupMember.member.memberIdx.eq(member.memberIdx))
+                .where(member.memberId.eq(memberId))
+                .fetchOne();
+    }
 }
 

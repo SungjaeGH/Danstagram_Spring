@@ -1,7 +1,6 @@
 package com.project.danstagram.domain.post.service;
 
-import com.project.danstagram.domain.post.dto.CreatePostImageDto;
-import com.project.danstagram.domain.post.dto.PostImageResponseDto;
+import com.project.danstagram.domain.post.dto.PostImageResponse;
 import com.project.danstagram.domain.post.entity.PostImage;
 import com.project.danstagram.domain.post.exception.PostImageNotFoundException;
 import com.project.danstagram.domain.post.repository.PostImageRepository;
@@ -33,15 +32,14 @@ public class PostImageService {
         for (Map<String, Object> imageInfo : mapList) {
             String storedImagePath = (String)imageInfo.get("fileName");
             String originImagePath = (String)imageInfo.get("originalFileName");
-            CreatePostImageDto createPostImageDto = new CreatePostImageDto(storedImagePath, originImagePath);
 
-            list.add(createPostImageDto.toEntity());
+            list.add(PostImageResponse.CreatePostImage.toEntity(storedImagePath, originImagePath));
         }
 
         return list;
     }
 
-    public List<PostImageResponseDto> getImagesList(Long postIdx) {
+    public List<PostImageResponse.PostImageInfo> getImagesList(Long postIdx) {
 
         // 서버에서 이미지 이름에 postIdx가 포함되어 있는 이미지 찾기
         Map<String, String> storedImgsMap = findStoredImgs(postIdx);
@@ -91,15 +89,15 @@ public class PostImageService {
         return matchesMap;
     }
 
-    private static List<PostImageResponseDto> setValidImgList(List<PostImage> imgList, Map<String, String> storedImgsMap) {
-        List<PostImageResponseDto> matchesList = new ArrayList<>();
+    private List<PostImageResponse.PostImageInfo> setValidImgList(List<PostImage> imgList, Map<String, String> storedImgsMap) {
+        List<PostImageResponse.PostImageInfo> matchesList = new ArrayList<>();
         long imgIdx = 0L;
 
         for (PostImage postImage : imgList) {
             if (storedImgsMap.containsKey(postImage.getStoreImageFile())) {
 
                 matchesList.add(
-                        PostImageResponseDto.builder()
+                        PostImageResponse.PostImageInfo.builder()
                                 .postImageIdx(++imgIdx)
                                 .imageName(postImage.getUploadImageFile())
                                 .encodingImage(storedImgsMap.get(postImage.getStoreImageFile()))
