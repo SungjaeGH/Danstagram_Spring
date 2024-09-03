@@ -1,9 +1,8 @@
 # Danstagram_Spring
-***
 춤을 좋아하는 사람들을 위한 커뮤니티 웹 사이트 개발
 
-## 목차
 ***
+## 목차
 1. [서비스 목적](#서비스-목적)
 2. [주요 기능](#주요-기능)
 3. [Used Stacks](#used-stacks)
@@ -12,13 +11,13 @@
 6. [ERD](#erd)
 7. [Commit Convention](#commit-convention)
 
+***
 ## 서비스 목적
-*** 
 * 최근에 Instagram, Tiktok, Youtube 등의 소셜 미디어에서 <u>인기 댄스 챌린지와 같은 춤 컨텐츠</u>가 많은 사용자의 관심을 받고 있음
 * 춤과 관련된 여러 정보를 제공함으로써, <u>Instagram을 기반으로 한 춤 커뮤니티 웹</u>을 만들고자 함
 
+*** 
 ## 주요 기능
-***
 * Instagram에서 제공하고 있는 기본 기능
   * feed
   * story
@@ -26,8 +25,8 @@
 * 춤 연습장 위치 제공 및 예약 기능
 * 공연 정보 제공 기능
 
-## Used Stacks
 ***
+## Used Stacks
 <div>
     <span style="font-size: 13pt">Language</span>
     <div width="100%">
@@ -72,11 +71,10 @@
 
 ***
 ## API
-***
 > [댄스타그램 API (Swagger UI)]()
 
-## Package Structure
 ***
+## Package Structure
 ```text
 │
 └─src
@@ -163,12 +161,12 @@
             └─templates
 ```
 
-## ERD
 ***
+## ERD
 > [댄스타그램 ERD (ERD Cloud)](https://www.erdcloud.com/d/dBGyg8uznH2qpLnhg)
 
-## Commit Convention
 ***
+## Commit Convention
 ### Type
 * feat: 기능 추가, 삭제, 변경
 * fix: 버그 수정
